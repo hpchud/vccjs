@@ -3,23 +3,11 @@
 var os = require("os");
 var network = require("network");
 var yaml = require("yamljs");
-var winston = require("winston");
 var promise = require("deferred");
 var watcher = require("watchjs");
 
+var logger = require("./log.js");
 var kvstore = require("./kvstore.js");
-
-var loglevel = 'debug';
-
-var logger = new (winston.Logger)({
-    transports: [
-        new winston.transports.Console({ 'timestamp': true, 'colorize': true, 'level': loglevel })
-    ],
-    exceptionHandlers: [
-        new winston.transports.Console({ 'timestamp': true, 'colorize': true, 'level': loglevel })
-    ]
-});
-
 
 function ClusterWatcher (config) {
     // load the config file

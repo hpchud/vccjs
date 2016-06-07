@@ -1,5 +1,6 @@
 var promise = require("deferred");
 var Etcd = require("node-etcd");
+var logger = require("winston");
 
 function VccStore (config) {
 	this.config = config;
