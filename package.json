@@ -1,0 +1,17 @@
+{
+  "name": "vcc",
+  "version": "0.0.0",
+  "description": "",
+  "main": "vcc.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Joshua Higgins <joshiggins@gmail.com> (http://joshh.info/)",
+  "license": "ISC",
+  "dependencies": {
+    "deferred": "^0.7.5",
+    "network": "^0.2.0",
+    "node-etcd": "^4.2.1",
+    "yamljs": "^0.2.7"
+  }
+}
