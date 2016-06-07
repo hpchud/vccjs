@@ -7,23 +7,15 @@ function VccStore (config) {
 }
 
 VccStore.prototype.set = function (key, value, ttl) {
-	var deferred = promise();
-	var opts = {};
 	if (ttl) {
-		opts.ttl = ttl;
+		this.etcd.setSync(key, value, {ttl: ttl});
+	} else {
+		this.etcd.setSync(key, value);
 	}
-	this.etcd.set(key, value, opts, function (result) {
-		deferred.resolve(result);
-	});
-	return deferred.promise();
 }
 
 VccStore.prototype.get = function (key) {
-	var deferred = promise();
-	this.etcd.get(key, function (result) {
-		deferred.resolve(result);
-	});
-	return deferred.promise();
+	return this.etcd.getSync(key).body.node;
 }
 
 VccStore.prototype.watch = function (key) {
@@ -31,10 +23,10 @@ VccStore.prototype.watch = function (key) {
 	return this.etcd.watcher(key);
 }
 
-VccStore.prototype.list = function (path) {
-	var deferred = promise();
-	this.etcd.get(key, {recursive: true}, function (result) {
-		deferred.resolve(result);
-	});
-	return deferred.promise();
+VccStore.prototype.list = function (key) {
+	return this.etcd.getSync(key, {recursive: true}).body.node.nodes;
 }
+
+
+
+module.exports = VccStore;

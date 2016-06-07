@@ -4,6 +4,7 @@ var os = require("os");
 var network = require("network");
 var yaml = require("yamljs");
 
+var kvstore = require("./kvstore.js");
 
 function ClusterWatcher (config) {
     // load the config file
@@ -25,17 +26,13 @@ ClusterWatcher.prototype.getAddress = function () {
     return deferred.promise();
 }
 
-ClusterWatcher.prototype.register = function () {
-    // get our ip address
-    this.getAddress().then(function (address) {
-        this.kvstore.set("/cluster/"+this.config.cluster+"/hosts/"+os.hostname(), address);
-    });
-    
-}
-
 
 var config = yaml.load("config.yml");
 
-var node = new ClusterWatcher(config);
+var VccStore = new kvstore(config);
 
-node.register();
+VccStore.set("/test", "josh");
+
+console.log(VccStore.get("/test"));
+
+console.log(VccStore.list("/"));
