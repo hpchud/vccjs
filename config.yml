@@ -1,6 +1,7 @@
 ---
 
-etcd:
+kvstore:
+	type: "etcd"
     host: "localhost"
     port: "4001"
 context: "headnode"

@@ -3,15 +3,11 @@
 var os = require("os");
 var network = require("network");
 var yaml = require("yamljs");
-var promise = require("deferred");
-var Etcd = require("node-etcd");
 
 
 function ClusterWatcher (config) {
     // load the config file
     this.config = config;
-    // connect to etcd
-    this.kvstore = new Etcd(this.config.etcd.host, this.config.etcd.port);
 }
 
 ClusterWatcher.prototype.getAddress = function () {
