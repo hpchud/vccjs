@@ -27,6 +27,4 @@ VccStore.prototype.list = function (key) {
 	return this.etcd.getSync(key, {recursive: true}).body.node.nodes;
 }
 
-
-
 module.exports = VccStore;

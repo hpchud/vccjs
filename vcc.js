@@ -3,8 +3,25 @@
 var os = require("os");
 var network = require("network");
 var yaml = require("yamljs");
+var winston = require("winston");
 
 var kvstore = require("./kvstore.js");
+
+var loglevel = 'debug';
+
+var logger = new (winston.Logger)({
+    transports: [
+        new winston.transports.Console({ 'timestamp': true, 'colorize': true, 'level': loglevel })
+    ],
+    exceptionHandlers: [
+        new winston.transports.Console({ 'timestamp': true, 'colorize': true, 'level': loglevel })
+    ]
+});
+
+
+
+
+
 
 function ClusterWatcher (config) {
     // load the config file
@@ -26,13 +43,11 @@ ClusterWatcher.prototype.getAddress = function () {
     return deferred.promise();
 }
 
+ClusterWatcher.prototype.register = function () {
+
+}
+
 
 var config = yaml.load("config.yml");
 
-var VccStore = new kvstore(config);
-
-VccStore.set("/test", "josh");
-
-console.log(VccStore.get("/test"));
-
-console.log(VccStore.list("/"));
+var clusterwatcher = new ClusterWatcher();
