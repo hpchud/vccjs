@@ -6,3 +6,5 @@ kvstore:
     port: "4001"
 context: "headnode"
 cluster: "test"
+depends:
+    config: false

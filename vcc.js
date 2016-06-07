@@ -5,6 +5,7 @@ var network = require("network");
 var yaml = require("yamljs");
 var winston = require("winston");
 var promise = require("deferred");
+var watcher = require("watchjs");
 
 var kvstore = require("./kvstore.js");
 
@@ -24,6 +25,9 @@ function ClusterWatcher (config) {
     // load the config file
     this.config = config;
     logger.info("ClusterWatcher initialised with config", config);
+    // assign watcher to wait for dependencies
+    this.depends_ready = false;
+    this.waitForDependencies();
 }
 
 ClusterWatcher.prototype.getAddress = function () {
@@ -44,12 +48,32 @@ ClusterWatcher.prototype.getAddress = function () {
     return deferred.promise();
 }
 
-ClusterWatcher.prototype.register = function () {
-
+ClusterWatcher.prototype.waitForDependencies = function () {
+    var me = this;
+    watcher.watch(this.config.depends, function() {
+        logger.debug("dependency state changed");
+        logger.debug(me.config.depends);
+        // see if all dependencies are met
+        var ready = true;
+        for (var key in me.config.depends) {
+            if (me.config.depends[key] == false) {
+                ready = false;
+            }
+        }
+        if(ready) {
+            logger.info("cluster service dependencies satisfied");
+            me.depends_ready = true;
+        } else {
+            logger.debug("cluster service dependencies are not satisfied");
+        }
+    });
 }
 
 
 var config = yaml.load("config.yml");
 
 var clusterwatcher = new ClusterWatcher(config);
-clusterwatcher.getAddress();
+
+setTimeout(function() {
+    clusterwatcher.config.depends['config'] = true;
+}, 1000);
