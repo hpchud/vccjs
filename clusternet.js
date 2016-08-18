@@ -34,6 +34,11 @@ ClusterNet.prototype.getAddress = function () {
     return deferred.promise();
 }
 
+ClusterNet.prototype.registerName = function () {
+    var key = "/cluster/"+this.config.cluster+"/hosts/"+this.config.myhostname;
+    this.store.register(key, this.config.myaddress, 60);
+}
+
 module.exports = {
     ClusterNet: function (service, config, targets) {
         var deferred = promise();
@@ -41,8 +46,10 @@ module.exports = {
         clusternet.getAddress().then(function (address) {
             logger.info("address discovered as", address);
             logger.info("our hostname is", os.hostname());
-            config.hostname = os.hostname();
-            config.address = address;
+            config.cluster.myhostname = os.hostname();
+            config.cluster.myaddress = address;
+            // register in cluster dns
+            clusternet.registerName();
             deferred.resolve();
         });
         return deferred.promise();
