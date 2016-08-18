@@ -33,7 +33,11 @@ VccStore.prototype.watch = function (key) {
 
 VccStore.prototype.list = function (key) {
 	logger.debug("key list:", key);
-	return this.etcd.getSync(key, {recursive: true}).body.node.nodes;
+	var keynode = this.etcd.getSync(key, {recursive: true}).body.node;
+	if (keynode) {
+		return keynode.nodes;
+	}
+	return keynode;
 }
 
 VccStore.prototype.register = function (key, value, ttl) {

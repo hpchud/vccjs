@@ -21,7 +21,7 @@ var ClusterNode = function (config) {
 ClusterNode.prototype.updateTargets = function(targets) {
     // write state of each target from our init to kvstore
     for (var target in targets) {
-        var key = "/cluster/"+this.config.cluster+"/hoststate/testnode/"+target;
+        var key = "/cluster/"+this.config.cluster+"/hoststate/"+this.config.myhostname+"/"+target;
         if (this.store.get(key) != targets[target].toString()) {
             this.store.set(key, targets[target]);
         }
@@ -89,7 +89,7 @@ ClusterNode.prototype.waitForProviders = function (targets) {
         if (ready) {
             logger.info("ClusterNode provider targets dependencies satisfied");
             // register our service state
-            me.store.register("/cluster/"+me.config.cluster+"/servicestate/"+me.config.service, "testnode", 60);
+            me.store.register("/cluster/"+me.config.cluster+"/services/"+me.config.service, me.config.myhostname, 60);
             deferred.resolve();
         } else {
             logger.debug("cluster provider targets dependencies are not satisfied");
