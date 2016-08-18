@@ -1,0 +1,18 @@
+---
+
+use_graphics: false
+graphics:
+    message: "vcc"
+    hidelog: true
+default_path: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+cluster:
+    kvstore:
+        type: "etcd"
+        host: "localhost"
+        port: "4001"
+    cluster: "test"
+    depends:
+        config: false
+    context: headnode
+    providers:
+        - torque

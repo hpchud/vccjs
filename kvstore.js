@@ -8,6 +8,7 @@ function VccStore (config) {
 }
 
 VccStore.prototype.set = function (key, value, ttl) {
+	logger.debug("key set:", key, value, ttl);
 	if (ttl) {
 		this.etcd.setSync(key, value, {ttl: ttl});
 	} else {
@@ -16,16 +17,32 @@ VccStore.prototype.set = function (key, value, ttl) {
 }
 
 VccStore.prototype.get = function (key) {
-	return this.etcd.getSync(key).body.node;
+	logger.debug("key get:", key)
+	var keynode = this.etcd.getSync(key).body.node;
+	if (keynode) {
+		return keynode.value;
+	}
+	return keynode;
 }
 
 VccStore.prototype.watch = function (key) {
 	// returns an event emitter on change
+	logger.debug("key watch:", key);
 	return this.etcd.watcher(key);
 }
 
 VccStore.prototype.list = function (key) {
+	logger.debug("key list:", key);
 	return this.etcd.getSync(key, {recursive: true}).body.node.nodes;
+}
+
+VccStore.prototype.register = function (key, value, ttl) {
+	logger.debug("key register:", key, value, ttl, "refresh in", (ttl*1000)-10000, "ms");
+	var me = this;
+	this.set(key, value, ttl);
+	setTimeout(function() {
+		me.register(key, value, ttl);
+	}, (ttl*1000)-10000);
 }
 
 module.exports = VccStore;
