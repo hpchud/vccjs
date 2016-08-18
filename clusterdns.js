@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 var os = require("os");
+var path = require("path");
 var network = require("network");
 var promise = require("deferred");
 
@@ -40,22 +41,39 @@ ClusterDNS.prototype.handleQuery = function (req, res) {
     // look for record in kvstore for this name
     var raddress = this.store.get("/cluster/"+this.config.cluster+"/hosts/"+qname);
     if (!raddress) {
+        var found = false;
         // see if address is a service name, and resolve to service host
-        console.log(this.store.list("/cluster/"+this.config.cluster+"/services"));
+        var services = this.store.list("/cluster/"+this.config.cluster+"/services");
+        for (var i = services.length - 1; i >= 0; i--) {
+            if (path.basename(services[i].key) == qname) {
+                // get the record for the host providing this service
+                var raddress = this.store.get("/cluster/"+this.config.cluster+"/hosts/"+services[i].value);
+                if (!raddress) {
+                    logger.error("ClusterDNS could not find the host for service", path.basename(services[i].key));
+                    res.send();
+                    return;
+                } else {
+                    found = true;
+                }
+                break;
+            }
+        };
         // else reject
-        logger.warn("ClusterDNS has no record for", qname, ", rejecting");
-        res.send();
-        return;
+        if (!found) {
+            logger.warn("ClusterDNS has no record for", qname, ", rejecting");
+            res.send();
+            return;
+        }
     }
     // prepare response
+    logger.info("ClusterDNS looked up", qname, "to", raddress);
     res.header.qr = 1;
     res.header.ra = 1;
     res.header.rd = 0;
     res.header.ancount = 1;
     res.header.nscount = 0;
     res.header.arcount = 0;
-    res.addRR(qname, 1, "IN", "A", "10.10.10.10");
-
+    res.addRR(qname, 1, "IN", "A", raddress);
     res.send();
 }
 
