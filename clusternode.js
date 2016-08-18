@@ -49,7 +49,9 @@ ClusterNode.prototype.getAddress = function () {
 ClusterNode.prototype.waitForDependencies = function () {
     var me = this;
     var deferred = promise();
-    watcher.watch(this.config.depends, function() {
+    logger.info("ClusterNode is waiting for cluster service dependencies");
+    // define function to check the depends object
+    var check_depends = function () {
         logger.debug("cluster service dependency state changed");
         logger.debug(me.config.depends);
         // see if all dependencies are met
@@ -60,18 +62,22 @@ ClusterNode.prototype.waitForDependencies = function () {
             }
         }
         if(ready) {
-            logger.debug("cluster service dependencies satisfied");
+            logger.info("ClusterNode service dependencies satisfied");
             deferred.resolve();
         } else {
             logger.debug("cluster service dependencies are not satisfied");
         }
-    });
+    };
+    // run it once and then watch for changes
+    check_depends();
+    watcher.watch(this.config.depends, check_depends);
     return deferred.promise();
 }
 
 ClusterNode.prototype.waitForProviders = function (targets) {
     var me = this;
     var deferred = promise();
+    logger.info("ClusterNode is waiting for provider services to start");
     watcher.watch(targets, this.config.providers, function () {
         logger.debug("cluster provider targets dependency state changed");
         var ready = true;
@@ -81,7 +87,9 @@ ClusterNode.prototype.waitForProviders = function (targets) {
             }
         }
         if (ready) {
-            logger.debug("cluster provider targets dependencies satisfied");
+            logger.info("ClusterNode provider targets dependencies satisfied");
+            // register our service state
+            me.store.register("/cluster/"+me.config.cluster+"/servicestate/"+me.config.service, "testnode", 60);
             deferred.resolve();
         } else {
             logger.debug("cluster provider targets dependencies are not satisfied");
@@ -93,7 +101,8 @@ ClusterNode.prototype.waitForProviders = function (targets) {
 module.exports = {
     ClusterNode: function (service, config, targets) {
         var deferred = promise();
-        clusternode = new ClusterNode(config.cluster);
+        var clusternode = new ClusterNode(config.cluster);
+        var store = new kvstore(config.cluster);
         // register our targets and watch for changes
         //clusternode.updateTargets(targets);
         //watcher.watch(targets, function () {
@@ -101,17 +110,20 @@ module.exports = {
         //});
         // wait for dependencies
         // when dependencies are satisfied, trigger service manager to continue
-        clusternode.waitForDependencies().then(function () {
+        if(config.cluster.depends) {
+            clusternode.waitForDependencies().then(function () {
+                deferred.resolve();
+            });
+        } else {
+            logger.debug("there are no cluster service dependencies");
             deferred.resolve();
-        });
-        setTimeout(function() {
-            config.cluster.depends.config = true;
-        }, 1000);
+        }
         // wait for provider targets to fulfil the cluster service we provide to trigger
-        clusternode.waitForProviders(targets).then(function () {
-            logger.debug("registering our context", config.cluster.context);
-            
-        });
+        if (config.cluster.service) {
+            clusternode.waitForProviders(targets).then(function () {
+                logger.debug("service is registered:", config.cluster.service);
+            });
+        }
         // return promise
         return deferred.promise();
     }

@@ -13,6 +13,6 @@ cluster:
     cluster: "test"
     depends:
         config: false
-    context: headnode
+    service: headnode
     providers:
         - torque
