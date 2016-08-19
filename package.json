@@ -10,6 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "deferred": "^0.7.5",
+    "glob": "^7.0.5",
     "network": "^0.2.0",
     "node-etcd": "^4.2.1",
     "watchjs": "0.0.0",

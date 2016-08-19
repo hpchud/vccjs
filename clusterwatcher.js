@@ -5,6 +5,8 @@ var fs = require("fs");
 var path = require("path");
 var network = require("network");
 var promise = require("deferred");
+var child_process = require('child_process');
+var glob = require('glob');
 
 var logger = require("./log.js");
 var kvstore = require("./kvstore.js");
@@ -50,12 +52,29 @@ ClusterWatcher.prototype.writeHosts = function (hosts) {
 }
 
 ClusterWatcher.prototype.runClusterHooks = function (hosts) {
-
+    var hook_dir = "/etc/vcc/cluster-hooks.d/*.sh";
+    glob(hook_dir, function (err, files) {
+        if (err) {
+            logger.error("could not enumerate cluster hooks", err);
+        }
+        for (var i = files.length - 1; i >= 0; i--) {
+            var script = files[i];
+            logger.debug("running hook", script);
+            var proc = child_process.spawn("/bin/sh", [script]);
+            proc.on('exit', function (code, signal) {
+                if (code > 0) {
+                    logger.warn("hook", script, "exited with code", code);
+                } else {
+                    logger.debug("hook", script, "exited with code", code);
+                }
+            });
+        };
+    })
 }
 
 ClusterWatcher.prototype.watchCluster = function () {
     var me = this;
-    var poll_ms = 1000;
+    var poll_ms = 5000;
     // define a function that reformats the list response to pairs
     var format_list = function (list) {
         var newlist = {};
