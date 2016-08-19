@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 
 var os = require("os");
+var fs = require("fs");
 var network = require("network");
 var yaml = require("yamljs");
 var promise = require("deferred");
 var watcher = require("watchjs");
+var child_process = require('child_process');
 
 var logger = require("./log.js");
 var kvstore = require("./kvstore.js");
@@ -16,6 +18,9 @@ var ClusterNode = function (config) {
     logger.info("ClusterNode initialised with config", config);
     // open kvstore
     this.store = new kvstore(config);
+    // our service dependencies
+    this.depends = {};
+    this.depends_hooks = {};
 }
 
 ClusterNode.prototype.updateTargets = function(targets) {
@@ -52,20 +57,22 @@ ClusterNode.prototype.waitForDependencies = function () {
     logger.info("ClusterNode is waiting for cluster service dependencies");
     var poll_ms = 2000;
     // create a status object for our depends
-    var depends = {};
+    this.depends = {};
     for (var i = this.config.depends.length - 1; i >= 0; i--) {
-        depends[this.config.depends[i]] = false;
+        this.depends[this.config.depends[i]] = false;
+        this.depends_hooks[this.config.depends[i]] = false;
     };
     // define function to check the depends object
     var check_depends = function () {
-        logger.debug(depends);
+        logger.debug(me.depends);
         var ready = true;
-        for (var depend in depends) {
-            if (depends[depend] == false) {
+        for (var depend in me.depends) {
+            if (me.depends[depend] == false) {
                 var value = me.store.get("/cluster/"+me.config.cluster+"/services/"+depend);
                 if (value) {
                     logger.debug("found service", depend, "on", value);
-                    depends[depend] = true;
+                    // save the host providing this service
+                    me.depends[depend] = value;
                 } else {
                     ready = false;
                 }
@@ -107,7 +114,61 @@ ClusterNode.prototype.waitForProviders = function (targets) {
 }
 
 ClusterNode.prototype.runServiceHooks = function () {
-    
+    var me = this;
+    var deferred = promise();
+    var hook_dir = "/etc/vcc/service-hooks.d/";
+    // define a function to execute each hook
+    var run_hook = function (service, host) {
+        // check if we have hook for this service
+        var script = hook_dir+service+".sh";
+        logger.debug("looking for service hook for", service);
+        fs.stat(script, function(err, stat) {
+            if(err == null) {
+                // run the hook
+                logger.debug('running service hook for', service, 'with target', host);
+                var proc = child_process.spawn("/bin/sh", [script, host]);
+                proc.on('exit', function (code, signal) {
+                    if (code > 0) {
+                        logger.warn("hook", script, "exited with code", code);
+                    } else {
+                        logger.debug("hook", script, "exited with code", code);
+                    }
+                    // when the hook is complete, set to true and the watcher will wait for all
+                    me.depends_hooks[service] = true;
+                });
+            } else if(err.code == 'ENOENT') {
+                // no hook installed but thats okay
+                me.depends_hooks[service] = true;
+                logger.warn('no service hook installed for', service);
+            } else {
+                // something went wrong, should we continue?
+                me.depends_hooks[service] = true;
+                logger.error('unhandled error hook stat', service);
+            }
+        });
+    }
+    // define a function to wait for all hooks to finish execution
+    var check_hooks = function () {
+        var ready = true;
+        for (var service in me.depends_hooks) {
+            if (me.depends_hooks[service] == false) {
+                ready = false
+            }
+        }
+        if (ready) {
+            logger.debug("service hooks are finished");
+            deferred.resolve();
+        } else {
+            logger.debug("service hooks are not finished");
+        }
+    }
+    // register watch for hooks finished
+    watcher.watch(this.depends_hooks, check_hooks);
+    // for each depends, run the hook
+    for (var service in this.depends) {
+        run_hook(service, this.depends[service]);
+    }
+    return deferred.promise();
 }
 
 module.exports = {
@@ -125,7 +186,10 @@ module.exports = {
         if(config.cluster.depends) {
             clusternode.waitForDependencies().then(function () {
                 logger.info("ClusterNode cluster service dependencies satisfied");
-                deferred.resolve();
+                logger.info("Running cluster service hooks (first-run)");
+                clusternode.runServiceHooks().then(function () {
+                    deferred.resolve();
+                });
             });
         } else {
             logger.debug("there are no cluster service dependencies");
