@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 var os = require("os");
+var fs = require("fs");
 var path = require("path");
 var network = require("network");
 var promise = require("deferred");
@@ -18,18 +19,37 @@ var ClusterWatcher = function (config) {
     // host cache
     this.lasthosts = {};
     // on change handlers
-    this.on_change = [this.writeHosts];
+    this.on_change = [this.runClusterHooks];
 }
 
 ClusterWatcher.prototype.onChange = function (f) {
     this.on_change.push(f);
 }
 
-ClusterWatcher.prototype.writeHosts = function () {
+ClusterWatcher.prototype.writeHosts = function (hosts) {
+    var deferred = promise();
     // write host file in /etc/hosts format
+    var hostpath = "/etc/hosts.vcc";
+    var file = fs.createWriteStream(hostpath);
+    // on error we should log it
+    file.on('error', function(err) {
+        logger.error(err);
+    });
+    // once open we should write file
+    file.once('open', function(fd) {
+        for (var host in hosts) {
+            file.write(hosts[host]+" "+host+"\n");
+        }
+        file.end();
+    });
+    // on close we should resolve the promise
+    file.on('close', function() {
+        deferred.resolve()
+    })
+    return deferred.promise();
 }
 
-ClusterWatcher.prototype.runClusterHooks = function () {
+ClusterWatcher.prototype.runClusterHooks = function (hosts) {
 
 }
 
@@ -42,7 +62,10 @@ ClusterWatcher.prototype.watchCluster = function () {
         for (var i = list.length - 1; i >= 0; i--) {
             newlist[path.basename(list[i].key)] = list[i].value;
         };
-        return newlist;
+        return Object.keys(newlist).sort().reduce(function (result, key) {
+            result[key] = newlist[key];
+            return result;
+        }, {});
     }
     // define a function to compare the lists
     var compare_list = function (lista, listb) {
@@ -59,7 +82,13 @@ ClusterWatcher.prototype.watchCluster = function () {
             if (compare_list(currenthosts, me.lasthosts)) {
                 logger.debug("cluster has not changed");
             } else {
-                logger.debug("cluster has changed");
+                logger.debug("cluster has changed, writing hosts");
+                me.writeHosts(currenthosts).then(function () {
+                    logger.debug("calling cluster change handlers now");
+                    for (var i = me.on_change.length - 1; i >= 0; i--) {
+                        me.on_change[i](currenthosts);
+                    };
+                });
             }
             // update host cache
             me.lasthosts = currenthosts;
