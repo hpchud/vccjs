@@ -50,27 +50,34 @@ ClusterNode.prototype.waitForDependencies = function () {
     var me = this;
     var deferred = promise();
     logger.info("ClusterNode is waiting for cluster service dependencies");
+    var poll_ms = 2000;
+    // create a status object for our depends
+    var depends = {};
+    for (var i = this.config.depends.length - 1; i >= 0; i--) {
+        depends[this.config.depends[i]] = false;
+    };
     // define function to check the depends object
     var check_depends = function () {
-        logger.debug("cluster service dependency state changed");
-        logger.debug(me.config.depends);
-        // see if all dependencies are met
+        logger.debug(depends);
         var ready = true;
-        for (var key in me.config.depends) {
-            if (me.config.depends[key] == false) {
-                ready = false;
+        for (var depend in depends) {
+            if (depends[depend] == false) {
+                var value = me.store.get("/cluster/"+me.config.cluster+"/services/"+depend);
+                if (value) {
+                    depends[depend] = true;
+                } else {
+                    ready = false;
+                }
             }
         }
-        if(ready) {
-            logger.info("ClusterNode service dependencies satisfied");
+        if (ready) {
             deferred.resolve();
         } else {
-            logger.debug("cluster service dependencies are not satisfied");
+            setTimeout(check_depends, poll_ms);
         }
     };
-    // run it once and then watch for changes
-    check_depends();
-    watcher.watch(this.config.depends, check_depends);
+    // poll for status changes
+    setTimeout(check_depends, poll_ms);
     return deferred.promise();
 }
 
@@ -112,6 +119,7 @@ module.exports = {
         // when dependencies are satisfied, trigger service manager to continue
         if(config.cluster.depends) {
             clusternode.waitForDependencies().then(function () {
+                logger.info("ClusterNode cluster service dependencies satisfied");
                 deferred.resolve();
             });
         } else {

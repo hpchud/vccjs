@@ -12,7 +12,7 @@ cluster:
         port: "4001"
     cluster: "test"
     depends:
-        config: false
+        - config
     service: headnode
     providers:
         - torque
