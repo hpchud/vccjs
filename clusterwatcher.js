@@ -16,6 +16,18 @@ var ClusterWatcher = function (config) {
     this.store = new kvstore(config);
 }
 
+ClusterWatcher.prototype.writeHosts = function () {
+    // write host file in /etc/hosts format
+}
+
+ClusterWatcher.prototype.runClusterHooks = function () {
+
+}
+
+ClusterWatcher.prototype.watchCluster = function () {
+    
+}
+
 module.exports = {
     ClusterWatcher: function (service, config, targets) {
         var deferred = promise();

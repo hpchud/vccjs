@@ -64,6 +64,7 @@ ClusterNode.prototype.waitForDependencies = function () {
             if (depends[depend] == false) {
                 var value = me.store.get("/cluster/"+me.config.cluster+"/services/"+depend);
                 if (value) {
+                    logger.debug("found service", depend, "on", value);
                     depends[depend] = true;
                 } else {
                     ready = false;
@@ -103,6 +104,10 @@ ClusterNode.prototype.waitForProviders = function (targets) {
         }
     });
     return deferred.promise();
+}
+
+ClusterNode.prototype.runServiceHooks = function () {
+    
 }
 
 module.exports = {
