@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 var os = require("os");
+var prependFile = require('prepend-file');
 var path = require("path");
 var network = require("network");
 var promise = require("deferred");
@@ -24,6 +25,17 @@ var ClusterDNS = function (config) {
     this.server.on("request", (this.handleQuery).bind(this));
     this.server.bind(53, "127.0.0.1");
     //this.client.bind();
+}
+
+ClusterDNS.prototype.prependResolv = function () {
+    // this function adds ourself to the top of /etc/resolv.conf
+    prependFile('/etc/resolv.conf', 'nameserver 127.0.0.1\n', function(err) {
+        if (err) {
+            logger.error("Could not add ourself into /etc/resolv.conf", err);
+            return;
+        }
+        logger.debug("Appended 127.0.0.1 into /etc/resolv.conf");
+    });
 }
 
 ClusterDNS.prototype.handleQuery = function (req, res) {
@@ -88,6 +100,7 @@ module.exports = {
     ClusterDNS: function (service, config, targets) {
         var deferred = promise();
         var clusterdns = new ClusterDNS(config.cluster);
+        clusterdns.prependResolv();
         deferred.resolve();
         return deferred.promise();
     }
