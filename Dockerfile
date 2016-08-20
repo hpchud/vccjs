@@ -15,7 +15,36 @@ RUN apt-get update \
 	vim \
 	curl \
 	ca-certificates \
-	openssh-server
+	openssh-server \
+	libtool \
+	libxml2-dev \
+	libssl-dev \
+	automake \
+	libboost-all-dev \
+	python3 \
+	python3-urllib3 \
+	&& apt-get build-dep --yes --force-yes torque \
+	&& apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# build and install torque 5 in one step
+WORKDIR /
+RUN git clone https://github.com/adaptivecomputing/torque.git -b 5.1.1.2 torque-src \
+	&& cd torque-src \
+	&& ./autogen.sh \
+	&& ./configure --prefix=/usr --disable-posixmemlock --disable-cpuset \
+	&& make \
+	&& make install \
+	&& ldconfig \
+	&& cd .. \
+	&& cp torque-src/torque.setup . \
+	&& rm -r torque-src
+
+# torque config
+# we don't have interaction so need to fix setup script
+RUN sed -i 's/-t create/-t create -f/' torque.setup \
+	&& ./torque.setup root localhost \
+	&& qmgr -c "set server auto_node_np=true" \
+	&& rm torque.setup
 
 # install n
 WORKDIR /
@@ -47,6 +76,16 @@ RUN npm install
 # install configuration files
 COPY init.yml /etc/init.yml
 COPY services.yml /etc/services.yml
+
+# cluster hook scripts
+RUN mkdir -p /etc/vcc/cluster-hooks.d
+ADD hooks/pbsnodes.sh /etc/vcc/cluster-hooks.d/pbsnodes.sh
+RUN chmod +x /etc/vcc/cluster-hooks.d/*
+
+# service hook scripts
+RUN mkdir /etc/vcc/service-hooks.d
+ADD hooks/headnode.sh /etc/vcc/service-hooks.d/headnode.sh
+RUN chmod +x /etc/vcc/service-hooks.d/*
 
 WORKDIR /
 #ENTRYPOINT ["node", "/init8js/init.js"]
