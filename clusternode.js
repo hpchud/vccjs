@@ -23,6 +23,27 @@ var ClusterNode = function (config) {
     this.depends_hooks = {};
 }
 
+ClusterNode.prototype.getServiceTargets = function () {
+    var deferred = promise();
+    var me = this;
+    var servicefile = "/etc/vcc/services-"+this.config.service+".yml";
+    fs.stat(servicefile, function(err, stat) {
+        if(err == null) {
+            // parse the yaml file and return json
+            deferred.resolve(yaml.load(servicefile));
+        } else if(err.code == 'ENOENT') {
+            // no service file
+            me.depends_hooks[service] = true;
+            logger.error('There is no service definition for '+me.config.service);
+            logger.error('Please create '+servicefile);
+        } else {
+            // something went wrong
+            logger.error('unhandled error hook stat', servicefile);
+        }
+    });
+    return deferred.promise();
+}
+
 ClusterNode.prototype.updateTargets = function(targets) {
     // write state of each target from our init to kvstore
     for (var target in targets) {
