@@ -196,9 +196,9 @@ module.exports = {
             deferred.resolve();
         }
         // wait for provider targets to fulfil the cluster service we provide to trigger
-        if (config.cluster.service) {
+        if (config.cluster.providers) {
             clusternode.waitForProviders(targets).then(function () {
-                logger.debug("service is registered:", config.cluster.service);
+                logger.debug("service providers complete, registered service:", config.cluster.service);
             });
         }
         // return promise
