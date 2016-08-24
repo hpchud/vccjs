@@ -1,0 +1,25 @@
+---
+
+sshd-priv:
+    type: shell
+    exec: mkdir /var/run/sshd
+
+sshd:
+    type: daemon
+    exec: /usr/sbin/sshd -D
+    requires: clusternet, sshd-priv
+
+trqauthd:
+    type: daemon
+    exec: /usr/sbin/trqauthd
+    requires: clusternode
+
+pbs_server:
+    type: daemon
+    exec: /usr/sbin/pbs_server -D
+    requires: trqauthd
+
+pbs_mom:
+    type: daemon
+    exec: /usr/sbin/pbs_mom -D
+    requires: trqauthd, clusterwatcher
