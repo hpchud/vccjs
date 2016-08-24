@@ -30,6 +30,7 @@ ClusterNode.prototype.getServiceTargets = function () {
     fs.stat(servicefile, function(err, stat) {
         if(err == null) {
             // parse the yaml file and return json
+            logger.debug("Registering service provider targets for "+me.config.service);
             deferred.resolve(yaml.load(servicefile));
         } else if(err.code == 'ENOENT') {
             // no service file
@@ -193,11 +194,18 @@ ClusterNode.prototype.runServiceHooks = function () {
 }
 
 module.exports = {
-    ClusterNode: function (service, config, targets) {
+    ClusterNode: function (service, config, targets, f_register_services) {
         var deferred = promise();
         var clusternode = new ClusterNode(config.cluster);
         var store = new kvstore(config.cluster);
         // register our targets and watch for changes
+        clusternode.getServiceTargets().then(function (targets) {
+            if (targets) {
+                f_register_services(targets);
+            } else {
+                logger.error("There were no service provider targets to fulfil our service");
+            }
+        });
         //clusternode.updateTargets(targets);
         //watcher.watch(targets, function () {
         //    clusternode.updateTargets(targets);
