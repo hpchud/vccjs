@@ -62,20 +62,22 @@ ClusterDNS.prototype.handleQuery = function (req, res) {
         } else {
             // see if address is a service name, and resolve to service host
             var services = this.store.list("/cluster/"+this.config.cluster+"/services");
-            for (var i = services.length - 1; i >= 0; i--) {
-                if (path.basename(services[i].key) == qname) {
-                    // get the record for the host providing this service
-                    var raddress = this.store.get("/cluster/"+this.config.cluster+"/hosts/"+services[i].value);
-                    if (!raddress) {
-                        logger.error("ClusterDNS could not find the host for service", path.basename(services[i].key));
-                        res.send();
-                        return;
-                    } else {
-                        found = true;
+            if (services) {
+                for (var i = services.length - 1; i >= 0; i--) {
+                    if (path.basename(services[i].key) == qname) {
+                        // get the record for the host providing this service
+                        var raddress = this.store.get("/cluster/"+this.config.cluster+"/hosts/"+services[i].value);
+                        if (!raddress) {
+                            logger.error("ClusterDNS could not find the host for service", path.basename(services[i].key));
+                            res.send();
+                            return;
+                        } else {
+                            found = true;
+                        }
+                        break;
                     }
-                    break;
-                }
-            };
+                };
+            }
         }
         // else reject
         if (!found) {
