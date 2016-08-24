@@ -15,4 +15,4 @@ cluster:
         - config
     service: headnode
     providers:
-        - torque
+        - pbs_server

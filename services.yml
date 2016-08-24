@@ -1,15 +1,9 @@
 ---
 
-networktest:
-    type: shell
-    exec: /bin/true
-    provides: network
-
 clusternet:
     type: module
     module: /vccjs/clusternet.js
     class: ClusterNet
-    requires: network
 
 clusterdns:
     type: module
@@ -28,12 +22,3 @@ clusterwatcher:
     module: /vccjs/clusterwatcher.js
     class: ClusterWatcher
     requires: clusternode
-
-sshd-priv:
-    type: shell
-    exec: mkdir /var/run/sshd
-
-sshd:
-    type: daemon
-    exec: /usr/sbin/sshd -D
-    requires: network, sshd-priv

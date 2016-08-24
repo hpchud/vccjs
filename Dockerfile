@@ -76,6 +76,9 @@ RUN npm install
 # install configuration files
 COPY init.yml /etc/init.yml
 COPY services.yml /etc/services.yml
+RUN mkdir -p /etc/vcc
+COPY services-headnode.yml /etc/vcc/services-headnode.yml
+COPY services-workernode.yml /etc/vcc/services-workernode.yml
 
 # cluster hook scripts
 RUN mkdir -p /etc/vcc/cluster-hooks.d
