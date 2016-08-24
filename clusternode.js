@@ -200,7 +200,14 @@ module.exports = {
         // register our targets and watch for changes
         clusternode.getServiceTargets().then(function (targets) {
             if (targets) {
+                // register service provider targets in the init system
                 f_register_services(targets);
+                // wait for provider targets to fulfil the cluster service we provide to trigger
+                if (config.cluster.providers) {
+                    clusternode.waitForProviders(targets).then(function () {
+                        logger.debug("service providers complete, registered service:", config.cluster.service);
+                    });
+                }
             } else {
                 logger.error("There were no service provider targets to fulfil our service");
             }
@@ -222,12 +229,6 @@ module.exports = {
         } else {
             logger.debug("there are no cluster service dependencies");
             deferred.resolve();
-        }
-        // wait for provider targets to fulfil the cluster service we provide to trigger
-        if (config.cluster.providers) {
-            clusternode.waitForProviders(targets).then(function () {
-                logger.debug("service providers complete, registered service:", config.cluster.service);
-            });
         }
         // return promise
         return deferred.promise();
