@@ -23,6 +23,39 @@ var ClusterNode = function (config) {
     this.depends_hooks = {};
 }
 
+ClusterNode.prototype.readDependencies = function () {
+    var deferred = promise();
+    var me = this;
+    var depfile = "/etc/vcc/dependencies.yml";
+    logger.debug('reading dependency file', depfile);
+    fs.stat(depfile, function(err, stat) {
+        if(err == null) {
+            // parse the yaml file and put into expected places
+            var deps = yaml.load(depfile);
+            if (deps[me.config.service]) {
+                // copy dependencies
+                me.config.depends = JSON.parse(JSON.stringify(deps[me.config.service].depends));
+                // copy providers if specified
+                if (deps[me.config.service].providers) {
+                    me.config.providers = JSON.parse(JSON.stringify(deps[me.config.service].providers));
+                }
+                // return
+                deferred.resolve();
+            } else {
+                logger.error('Dependency file does not define our service', me.config.service);
+            }
+        } else if(err.code == 'ENOENT') {
+            // no service file
+            logger.error('There is no service dependency file');
+            logger.error('Please create '+depfile);
+        } else {
+            // something went wrong
+            logger.error('unhandled error hook stat', depfile);
+        }
+    });
+    return deferred.promise();
+}
+
 ClusterNode.prototype.getServiceTargets = function () {
     var deferred = promise();
     var me = this;
@@ -197,39 +230,42 @@ module.exports = {
         var deferred = promise();
         var clusternode = new ClusterNode(config.cluster);
         var store = new kvstore(config.cluster);
-        // register our targets and watch for changes
-        clusternode.getServiceTargets().then(function (targets) {
-            if (targets) {
-                // register service provider targets in the init system
-                f_register_services(targets);
-                // wait for provider targets to fulfil the cluster service we provide to trigger
-                if (config.cluster.providers) {
-                    clusternode.waitForProviders(targets).then(function () {
-                        logger.debug("service providers complete, registered service:", config.cluster.service);
-                    });
+        // read in dependencies first
+        clusternode.readDependencies().then(function () {
+            // register our targets and watch for changes
+            clusternode.getServiceTargets().then(function (targets) {
+                if (targets) {
+                    // register service provider targets in the init system
+                    f_register_services(targets);
+                    // wait for provider targets to fulfil the cluster service we provide to trigger
+                    if (config.cluster.providers) {
+                        clusternode.waitForProviders(targets).then(function () {
+                            logger.debug("service providers complete, registered service:", config.cluster.service);
+                        });
+                    }
+                } else {
+                    logger.error("There were no service provider targets to fulfil our service");
                 }
+            });
+            //clusternode.updateTargets(targets);
+            //watcher.watch(targets, function () {
+            //    clusternode.updateTargets(targets);
+            //});
+            // wait for dependencies
+            // when dependencies are satisfied, trigger service manager to continue
+            if(config.cluster.depends) {
+                clusternode.waitForDependencies().then(function () {
+                    logger.info("ClusterNode cluster service dependencies satisfied");
+                    logger.info("Running cluster service hooks (first-run)");
+                    clusternode.runServiceHooks().then(function () {
+                        deferred.resolve();
+                    });
+                });
             } else {
-                logger.error("There were no service provider targets to fulfil our service");
+                logger.debug("there are no cluster service dependencies");
+                deferred.resolve();
             }
         });
-        //clusternode.updateTargets(targets);
-        //watcher.watch(targets, function () {
-        //    clusternode.updateTargets(targets);
-        //});
-        // wait for dependencies
-        // when dependencies are satisfied, trigger service manager to continue
-        if(config.cluster.depends) {
-            clusternode.waitForDependencies().then(function () {
-                logger.info("ClusterNode cluster service dependencies satisfied");
-                logger.info("Running cluster service hooks (first-run)");
-                clusternode.runServiceHooks().then(function () {
-                    deferred.resolve();
-                });
-            });
-        } else {
-            logger.debug("there are no cluster service dependencies");
-            deferred.resolve();
-        }
         // return promise
         return deferred.promise();
     }

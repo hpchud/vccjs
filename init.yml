@@ -11,8 +11,4 @@ cluster:
         host: "10.71.88.133"
         port: "4001"
     cluster: "test"
-    depends:
-        - config
     service: headnode
-    providers:
-        - pbs_server

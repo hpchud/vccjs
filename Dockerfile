@@ -79,6 +79,7 @@ COPY services.yml /etc/services.yml
 RUN mkdir -p /etc/vcc
 COPY services-headnode.yml /etc/vcc/services-headnode.yml
 COPY services-workernode.yml /etc/vcc/services-workernode.yml
+COPY dependencies.yml /etc/vcc/dependencies.yml
 
 # cluster hook scripts
 RUN mkdir -p /etc/vcc/cluster-hooks.d
