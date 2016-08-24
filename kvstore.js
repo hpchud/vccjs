@@ -7,6 +7,41 @@ function VccStore (config) {
 	this.etcd = new Etcd(config.kvstore.host, config.kvstore.port);
 }
 
+VccStore.prototype.checkResponse = function (res) {
+	if (res.err) {
+		// key not found is acceptable
+		if(res.err.errorCode == 100) {
+			return undefined;
+		} else {
+			// otherwise, shout about the error
+			logger.error("got an error from etcd", res.err);
+			logger.error("error code was", res.err.errorCode);
+			logger.error("check connectivity and settings for kvstore server");
+			if (res.err.errors) {
+				for (var i = res.err.errors.length - 1; i >= 0; i--) {
+					console.log(res.err.errors[i]);
+				};
+			}
+			throw "got an error from etcd, throwing";
+		}
+	} else {
+		if (res.body) {
+			if (res.body.node) {
+				// res.body.node is what we want
+				return res.body.node;
+			} else {
+				logger.error("etcd response had body but no node");
+				console.log(res);
+				throw "etcd response had body but no node";
+			}
+		} else {
+			logger.error("etcd response had no body");
+			console.log(res);
+			throw "etcd response had no body";
+		}
+	}
+}
+
 VccStore.prototype.set = function (key, value, ttl) {
 	logger.debug("key set:", key, value, ttl);
 	if (ttl) {
@@ -18,7 +53,7 @@ VccStore.prototype.set = function (key, value, ttl) {
 
 VccStore.prototype.get = function (key) {
 	logger.debug("key get:", key)
-	var keynode = this.etcd.getSync(key).body.node;
+	var keynode = this.checkResponse(this.etcd.getSync(key));
 	if (keynode) {
 		return keynode.value;
 	}
