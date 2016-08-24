@@ -10,11 +10,11 @@ sshd:
     requires: clusternet, sshd-priv
 
 trqauthd:
-    type:daemon
-    exec: /usr/sbin/trqauthd
+    type: daemon
+    exec: /usr/sbin/trqauthd -D
     requires: clusternode
 
 pbs_mom:
     type: daemon
     exec: /usr/sbin/pbs_mom -D
-    requires: "trqauthd, clusterwatcher"
+    requires: trqauthd, clusterwatcher

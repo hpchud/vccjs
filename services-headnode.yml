@@ -9,17 +9,16 @@ sshd:
     exec: /usr/sbin/sshd -D
     requires: clusternet, sshd-priv
 
+server_name:
+    type: shell
+    exec: "cat /etc/hostname > /var/spool/torque/server_name"
+
 trqauthd:
     type: daemon
-    exec: /usr/sbin/trqauthd
-    requires: clusternode
+    exec: /usr/sbin/trqauthd -D
+    requires: clusternode, server_name
 
 pbs_server:
     type: daemon
     exec: /usr/sbin/pbs_server -D
     requires: trqauthd
-
-pbs_mom:
-    type: daemon
-    exec: /usr/sbin/pbs_mom -D
-    requires: trqauthd, clusterwatcher
