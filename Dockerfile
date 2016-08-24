@@ -62,7 +62,7 @@ RUN n 0.10
 WORKDIR /
 RUN git clone https://github.com/joshiggins/init8js.git \
 	&& cd init8js \
-	&& git checkout -q 0a5e8cc88fd2c390dccae1baa75773976fc4ce24
+	&& git checkout -q 7bb57742578c0cdfdcfbb4a8e89a9e84801fd104
 WORKDIR /init8js
 RUN npm install
 RUN cp -r node_modules /lib/

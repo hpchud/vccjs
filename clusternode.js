@@ -34,7 +34,6 @@ ClusterNode.prototype.getServiceTargets = function () {
             deferred.resolve(yaml.load(servicefile));
         } else if(err.code == 'ENOENT') {
             // no service file
-            me.depends_hooks[service] = true;
             logger.error('There is no service definition for '+me.config.service);
             logger.error('Please create '+servicefile);
         } else {
