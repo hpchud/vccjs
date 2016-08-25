@@ -1,0 +1,11 @@
+---
+
+headnode:
+    depends:
+        - config
+    providers:
+        - pbs_server
+
+workernode:
+    depends:
+        - headnode
