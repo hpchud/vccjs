@@ -92,4 +92,4 @@ ADD hooks/headnode.sh /etc/vcc/service-hooks.d/headnode.sh
 RUN chmod +x /etc/vcc/service-hooks.d/*
 
 WORKDIR /
-#ENTRYPOINT ["node", "/init8js/init.js"]
+ENTRYPOINT ["/vccjs/launch.sh"]
