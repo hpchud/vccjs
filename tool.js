@@ -10,7 +10,7 @@ opt = require('node-getopt').create([
   ['', 'storage-host=IP', 'ip address of storage host'],
   ['', 'storage-port=PORT', 'port of storage service'],
   ['', 'service=SERVICE', 'for a multi service image, specify the service to start'],
-  ['', 'eval', 'format output suitable to eval in the host shell'],
+  //['', 'eval', 'format output suitable to eval in the host shell'],
   ['', 'just-yml', 'just dump the generated cluster init.yml and nothing else'],
   ['i', 'info', 'display information about this vcc image'],
   ['h', 'help', 'display this help'],
@@ -79,10 +79,9 @@ if ((options.version || options.info || options.start)) {
                 console.error("You must specify either --start-storage OR --storage-host and --storage-port");
             }
         }
-        // output command for starting the storage if we need to
+        // generate command for starting the storage if we need to
         if (options['start-storage']) {
             var storagecommand = "docker run -d --name=vccstore"+options.cluster+" --net=host quay.io/coreos/etcd --listen-client-urls 'http://0.0.0.0:2379,http://0.0.0.0:4001' --advertise-client-urls 'http://0.0.0.0:2379,http://0.0.0.0:4001'";
-            console.log(storagecommand);
         }
         // generate yml config with cluster name and storage details in
         // since the tool is executed within the image itself, we can just look at /etc/init.yml
@@ -100,9 +99,15 @@ if ((options.version || options.info || options.start)) {
             inityml.cluster.service = options.service;
         }
         var b64inityml = new Buffer(yaml.stringify(inityml)).toString('base64');
-        // output command for starting this image
+        // generate command for starting this image
         var runcommand = "docker run -d --net=host --name=vcc"+options.cluster+" $VCCIMAGE b64inityml="+b64inityml;
-        console.log(runcommand);
+        // output the commands in the desired format
+        if (options['just-yml']) {
+            console.log(yaml.stringify(inityml));
+        } else {
+            console.log(storagecommand);
+            console.log(runcommand);
+        }
     }
 } else {
     console.error("You must either start the image or use one of the [info|help|version] options");
