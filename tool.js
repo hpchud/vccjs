@@ -101,7 +101,7 @@ if ((options.version || options.info || options.start)) {
         }
         var b64inityml = new Buffer(yaml.stringify(inityml)).toString('base64');
         // output command for starting this image
-        var runcommand = "docker run -d --name=vcc"+options.cluster+" vccimagename b64inityml="+b64inityml;
+        var runcommand = "docker run -d --net=host --name=vcc"+options.cluster+" $VCCIMAGE b64inityml="+b64inityml;
         console.log(runcommand);
     }
 } else {
