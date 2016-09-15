@@ -105,7 +105,9 @@ if ((options.version || options.info || options.start)) {
         if (options['just-yml']) {
             console.log(yaml.stringify(inityml));
         } else {
-            console.log(storagecommand);
+            if(options['start-storage']) {
+                console.log(storagecommand);
+            }
             console.log(runcommand);
         }
     }

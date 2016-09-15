@@ -147,6 +147,7 @@ ClusterNode.prototype.waitForProviders = function (targets) {
     var me = this;
     var deferred = promise();
     logger.info("ClusterNode is waiting for provider services to start");
+    logger.debug("watching object", targets, "for changes on attributes", this.config.providers);
     watcher.watch(targets, this.config.providers, function () {
         logger.debug("cluster provider targets dependency state changed");
         var ready = true;
@@ -233,12 +234,14 @@ module.exports = {
         // read in dependencies first
         clusternode.readDependencies().then(function () {
             // register our targets and watch for changes
-            clusternode.getServiceTargets().then(function (targets) {
-                if (targets) {
+            clusternode.getServiceTargets().then(function (stargets) {
+                if (stargets) {
                     // register service provider targets in the init system
-                    f_register_services(targets);
+                    f_register_services(stargets);
                     // wait for provider targets to fulfil the cluster service we provide to trigger
                     if (config.cluster.providers) {
+                        // here we must pass the targets state from the service manager "targets"
+                        // not the service targets we loaded from disk "stargets"
                         clusternode.waitForProviders(targets).then(function () {
                             logger.debug("service providers complete, registered service:", config.cluster.service);
                         });
