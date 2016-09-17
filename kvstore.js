@@ -2,15 +2,20 @@ var promise = require("deferred");
 var Etcd = require("node-etcd");
 var logger = require("winston");
 
-function VccStore (config) {
-	this.config = config;
-	this.etcd = new Etcd(config.kvstore.host, config.kvstore.port);
+function VccStore () {
+}
+
+VccStore.prototype.connect = function (host, port) {
+	var conn = "http://"+host+":"+port;
+	logger.debug("kvstore is connecting to", conn);
+	this.etcd = new Etcd(conn, {timeout: 5000});
 }
 
 VccStore.prototype.checkResponse = function (res) {
 	if (res.err) {
 		// key not found is acceptable
 		if(res.err.errorCode == 100) {
+			logger.debug("etcd error code was 100, key not found");
 			return undefined;
 		} else {
 			// otherwise, shout about the error
@@ -45,10 +50,15 @@ VccStore.prototype.checkResponse = function (res) {
 VccStore.prototype.set = function (key, value, ttl) {
 	logger.debug("key set:", key, value, ttl);
 	if (ttl) {
-		this.etcd.setSync(key, value, {ttl: ttl});
+		logger.debug("before set with ttl");
+		var res = this.etcd.setSync(key, value, {ttl: ttl, maxRetries: 3});
+		logger.debug("after set with ttl");
 	} else {
-		this.etcd.setSync(key, value);
+		logger.debug("before set");
+		var res = this.etcd.setSync(key, value);
+		logger.debug("after set");
 	}
+	logger.debug("set return", res);
 }
 
 VccStore.prototype.get = function (key) {
@@ -68,7 +78,7 @@ VccStore.prototype.watch = function (key) {
 
 VccStore.prototype.list = function (key) {
 	logger.debug("key list:", key);
-	var keynode = this.etcd.getSync(key, {recursive: true}).body.node;
+	var keynode = this.checkResponse(this.etcd.getSync(key, {recursive: true}));
 	if (keynode) {
 		return keynode.nodes;
 	}
