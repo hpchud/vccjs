@@ -4,19 +4,11 @@ var os = require("os");
 var network = require("network");
 var promise = require("deferred");
 
+var vccutil = require("./vccutil.js");
 var logger = require("./log.js");
-var kvstore = require("./kvstore.js");
 
 
-var ClusterNet = function (config) {
-    // load the config file
-    this.config = config;
-    logger.info("ClusterNet initialised with config", config);
-    // open kvstore
-    this.store = new kvstore(config);
-}
-
-ClusterNet.prototype.getAddress = function () {
+var getAddress = function () {
     var deferred = promise();
     network.get_interfaces_list(function (err, list) {
         if(err) {
@@ -53,24 +45,19 @@ ClusterNet.prototype.getAddress = function () {
     return deferred.promise();
 }
 
-ClusterNet.prototype.registerName = function () {
-    var key = "/cluster/"+this.config.cluster+"/hosts/"+this.config.myhostname;
-    this.store.register(key, this.config.myaddress, 60);
-}
 
-module.exports = {
-    ClusterNet: function (service, config, targets) {
-        var deferred = promise();
-        var clusternet = new ClusterNet(config.cluster);
-        clusternet.getAddress().then(function (address) {
-            logger.info("address discovered as", address);
-            logger.info("our hostname is", os.hostname());
-            config.cluster.myhostname = os.hostname();
-            config.cluster.myaddress = address;
-            // register in cluster dns
-            clusternet.registerName();
-            deferred.resolve();
-        });
-        return deferred.promise();
-    }
-};
+getAddress().then(function (address) {
+    logger.info("address discovered as", address);
+    logger.info("our hostname is", os.hostname());
+    // update the config file with our address and hostname
+    var config = vccutil.getConfig();
+    config.myhostname = os.hostname();
+    config.myaddress = address;
+    vccutil.writeConfig(config).then(function () {
+        logger.info("updated config in /etc/init.yml");
+    },
+    function (err) {
+        logger.error("failed to write /etc/init.yml");
+        logger.error(err);
+    });
+});
