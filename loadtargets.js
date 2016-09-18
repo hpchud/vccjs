@@ -3,6 +3,7 @@
 var os = require("os");
 var fs = require("fs");
 var promise = require("deferred");
+var yaml = require('yamljs');
 
 var vccutil = require("./vccutil.js");
 var logger = require("./log.js");
