@@ -1,0 +1,7 @@
+---
+
+use_graphics: false
+graphics:
+    message: "vcc"
+    hidelog: true
+default_path: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
