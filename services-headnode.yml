@@ -1,14 +1,5 @@
 ---
 
-sshd-priv:
-    type: shell
-    exec: mkdir /var/run/sshd
-
-sshd:
-    type: daemon
-    exec: /usr/sbin/sshd -D
-    requires: clusterstart, sshd-priv
-
 server_name:
     type: shell
     exec: "cat /etc/hostname > /var/spool/torque/server_name"
