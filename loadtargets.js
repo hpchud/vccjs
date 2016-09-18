@@ -2,6 +2,7 @@
 
 var os = require("os");
 var os = require("fs");
+var promise = require("deferred");
 
 var vccutil = require("./vccutil.js");
 var logger = require("./log.js");
