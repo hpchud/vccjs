@@ -8,6 +8,7 @@ var promise = require("deferred");
 var child_process = require('child_process');
 var glob = require('glob');
 
+var vccutil = require("./vccutil.js");
 var logger = require("./log.js");
 var kvstore = require("./kvstore.js");
 
@@ -16,6 +17,9 @@ var ClusterWatcher = function (config) {
     // load the config file
     this.config = config;
     logger.info("ClusterWatcher initialised with config", config);
+    // connect kvstore
+    this.kvstore = new kvstore();
+    this.kvstore.connect(config.kvstore.host, config.kvstore.port);
     // host cache
     this.lasthosts = {};
     // on change handlers
@@ -91,7 +95,7 @@ ClusterWatcher.prototype.watchCluster = function () {
     // define a function that is called on the poll interval
     // use the polling strategy instead of watching because it's more stable
     var poll_hosts = function () {
-        var hosts = kvstore.list("/cluster/"+me.config.cluster+"/hosts");
+        var hosts = this.kvstore.list("/cluster/"+me.config.cluster+"/hosts");
         if (hosts) {
             var currenthosts = format_list(hosts);
             logger.debug(hosts.length, "hosts in cluster");
@@ -118,12 +122,6 @@ ClusterWatcher.prototype.watchCluster = function () {
     setTimeout(poll_hosts, poll_ms);
 }
 
-module.exports = {
-    ClusterWatcher: function (service, config, targets) {
-        var deferred = promise();
-        var clusterwatcher = new ClusterWatcher(config.cluster);
-        clusterwatcher.watchCluster();
-        deferred.resolve();
-        return deferred.promise();
-    }
-};
+
+var clusterwatcher = new ClusterWatcher(vccutil.getConfig());
+clusterwatcher.watchCluster();
