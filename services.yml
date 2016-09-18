@@ -12,7 +12,7 @@ clusterdns:
 
 loadtargets:
     type: module
-    module: /vccjs/loadtargets.js"
+    module: "/vccjs/loadtargets.js"
     class: LoadTargets
 
 wait4deps:
