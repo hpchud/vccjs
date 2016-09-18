@@ -95,7 +95,7 @@ ClusterWatcher.prototype.watchCluster = function () {
     // define a function that is called on the poll interval
     // use the polling strategy instead of watching because it's more stable
     var poll_hosts = function () {
-        var hosts = this.kvstore.list("/cluster/"+me.config.cluster+"/hosts");
+        var hosts = me.kvstore.list("/cluster/"+me.config.cluster+"/hosts");
         if (hosts) {
             var currenthosts = format_list(hosts);
             logger.debug(hosts.length, "hosts in cluster");
