@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 var os = require("os");
-var os = require("fs");
+var fs = require("fs");
 var promise = require("deferred");
 
 var vccutil = require("./vccutil.js");
