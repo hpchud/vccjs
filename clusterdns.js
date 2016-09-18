@@ -17,6 +17,7 @@ var ndns = require('./ndns.js');
 var ClusterDNS = function (config) {
     // load the config file
     this.config = config;
+    logger.debug(config);
     logger.info("ClusterDNS initialised with config", config);
     // connect kvstore
     this.kvstore = new kvstore();
@@ -25,11 +26,18 @@ var ClusterDNS = function (config) {
     this.server = ndns.createServer('udp4');
     this.client = ndns.createClient('udp4');
     this.server.on("request", (this.handleQuery).bind(this));
+    // register our name
+    this.registerName();
 }
 
 ClusterDNS.prototype.bind = function (port, ip) {
     logger.info("ClusterDNS listening on", port, ip);
     this.server.bind(port, ip);
+}
+
+ClusterDNS.prototype.registerName = function () {
+    var key = "/cluster/"+this.config.cluster+"/hosts/"+this.config.myhostname;
+    this.kvstore.register(key, this.config.myaddress, 60);
 }
 
 ClusterDNS.prototype.prependResolv = function () {

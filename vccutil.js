@@ -4,13 +4,13 @@ var yaml = require('yamljs');
 var promise = require("deferred");
 
 exports.getConfig = function () {
-	var config = yaml.load('/etc/init.yml');
+	var config = yaml.load('/etc/vcc/cluster.yml');
 	return config.cluster;
 }
 
 exports.writeConfig = function (newconfig) {
 	var deferred = promise();
-	fs.writeFile('/etc/init.yml', yaml.stringify(newconfig), function (err) {
+	fs.writeFile('/etc/vcc/cluster.yml', yaml.stringify(newconfig), function (err) {
 		if (err) {
 			deferred.reject(err);
 		}

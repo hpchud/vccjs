@@ -1,0 +1,8 @@
+---
+
+kvstore:
+    type: "etcd"
+    host: "10.71.88.133"
+    port: "4001"
+cluster: "test"
+service: headnode
