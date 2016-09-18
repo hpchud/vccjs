@@ -54,10 +54,10 @@ getAddress().then(function (address) {
     config.myhostname = os.hostname();
     config.myaddress = address;
     vccutil.writeConfig(config).then(function () {
-        logger.info("updated config in /etc/init.yml");
+        logger.info("updated config");
     },
     function (err) {
-        logger.error("failed to write /etc/init.yml");
+        logger.error("failed to write config");
         logger.error(err);
     });
 });
