@@ -145,17 +145,27 @@ var runServiceHooks = function () {
 }
 
 readDependencies().then(function () {
-	config.kv = new kvstore();
-	config.kv.connect(config.kvstore.host, config.kvstore.port);
-	if(config.depends) {
-		waitForDependencies().then(function () {
-			logger.info("ClusterNode cluster service dependencies satisfied");
-            logger.info("Running cluster service hooks (first-run)");
-            runServiceHooks().then(function () {
-                logger.info("Service hooks complete");
+    // save the new config
+    vccutil.writeConfig(config).then(function () {
+        logger.info("Updated configuration");
+        // open the kvstore
+        config.kv = new kvstore();
+        config.kv.connect(config.kvstore.host, config.kvstore.port);
+        // if we have dependencies, wait for them
+        if(config.depends) {
+            waitForDependencies().then(function () {
+                logger.info("ClusterNode cluster service dependencies satisfied");
+                logger.info("Running cluster service hooks (first-run)");
+                runServiceHooks().then(function () {
+                    logger.info("Service hooks complete");
+                });
             });
-		});
-	} else {
-		logger.debug("there are no cluster service dependencies");
-	}
+        } else {
+            logger.debug("there are no cluster service dependencies");
+        }
+    }, function (err) {
+        logger.error("could not write config");
+        logger.error(err);
+    });
+    
 });
