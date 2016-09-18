@@ -9,15 +9,13 @@ var watcher = require("watchjs");
 var child_process = require('child_process');
 
 var logger = require("./log.js");
-var kvstore = require("./kvstore.js");
+var this.config.kv = require("./this.config.kv.js");
 
 
 var ClusterNode = function (config) {
     // load the config file
     this.config = config;
     logger.info("ClusterNode initialised with config", config);
-    // open kvstore
-    this.store = new kvstore(config);
     // our service dependencies
     this.depends = {};
     this.depends_hooks = {};
@@ -78,11 +76,11 @@ ClusterNode.prototype.getServiceTargets = function () {
 }
 
 ClusterNode.prototype.updateTargets = function(targets) {
-    // write state of each target from our init to kvstore
+    // write state of each target from our init to this.config.kv
     for (var target in targets) {
         var key = "/cluster/"+this.config.cluster+"/hoststate/"+this.config.myhostname+"/"+target;
-        if (this.store.get(key) != targets[target].toString()) {
-            this.store.set(key, targets[target]);
+        if (this.config.kv.get(key) != targets[target].toString()) {
+            this.config.kv.set(key, targets[target]);
         }
     }
 }
@@ -122,7 +120,7 @@ ClusterNode.prototype.waitForDependencies = function () {
         var ready = true;
         for (var depend in me.depends) {
             if (me.depends[depend] == false) {
-                var value = me.store.get("/cluster/"+me.config.cluster+"/services/"+depend);
+                var value = this.config.kv.get("/cluster/"+me.config.cluster+"/services/"+depend);
                 if (value) {
                     logger.debug("found service", depend, "on", value);
                     // save the host providing this service
@@ -158,8 +156,6 @@ ClusterNode.prototype.waitForProviders = function (targets) {
         }
         if (ready) {
             logger.info("ClusterNode provider targets dependencies satisfied");
-            // register our service state
-            me.store.register("/cluster/"+me.config.cluster+"/services/"+me.config.service, me.config.myhostname, 60);
             deferred.resolve();
         } else {
             logger.debug("cluster provider targets dependencies are not satisfied");
@@ -230,7 +226,6 @@ module.exports = {
     ClusterNode: function (service, config, targets, f_register_services) {
         var deferred = promise();
         var clusternode = new ClusterNode(config.cluster);
-        var store = new kvstore(config.cluster);
         // read in dependencies first
         clusternode.readDependencies().then(function () {
             // register our targets and watch for changes
@@ -243,7 +238,10 @@ module.exports = {
                         // here we must pass the targets state from the service manager "targets"
                         // not the service targets we loaded from disk "stargets"
                         clusternode.waitForProviders(targets).then(function () {
-                            logger.debug("service providers complete, registered service:", config.cluster.service);
+                            // register our service state
+                            logger.debug("service providers complete, registering service:", config.cluster.service);
+                            this.config.kv.register("/cluster/"+config.cluster.cluster+"/services/"+config.cluster.service, config.cluster.myhostname, 60);
+                            logger.debug("service registered:", config.cluster.service)
                         });
                     }
                 } else {

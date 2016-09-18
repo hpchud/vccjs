@@ -6,6 +6,7 @@ var path = require("path");
 var network = require("network");
 var promise = require("deferred");
 
+var vccutil = require("./vccutil.js");
 var logger = require("./log.js");
 var kvstore = require("./kvstore.js");
 
@@ -17,25 +18,30 @@ var ClusterDNS = function (config) {
     // load the config file
     this.config = config;
     logger.info("ClusterDNS initialised with config", config);
-    // open kvstore
-    this.store = new kvstore(config);
+    // connect kvstore
+    this.kvstore = new kvstore();
+    this.kvstore.connect(config.kvstore.host, config.kvstore.port);
     // start up the server
     this.server = ndns.createServer('udp4');
     this.client = ndns.createClient('udp4');
     this.server.on("request", (this.handleQuery).bind(this));
-    this.server.bind(53, "127.0.0.1");
-    //this.client.bind();
+}
+
+ClusterDNS.prototype.bind = function (port, ip) {
+    logger.info("ClusterDNS listening on", port, ip);
+    this.server.bind(port, ip);
 }
 
 ClusterDNS.prototype.prependResolv = function () {
+    var deferred = promise();
     // this function adds ourself to the top of /etc/resolv.conf
     prependFile('/etc/resolv.conf', 'nameserver 127.0.0.1\n', function(err) {
         if (err) {
-            logger.error("Could not add ourself into /etc/resolv.conf", err);
-            return;
+            deferred.reject(err);
         }
-        logger.debug("Appended 127.0.0.1 into /etc/resolv.conf");
+        deferred.resolve();
     });
+    return deferred.promise();
 }
 
 ClusterDNS.prototype.handleQuery = function (req, res) {
@@ -50,23 +56,23 @@ ClusterDNS.prototype.handleQuery = function (req, res) {
     res.addQuestion(req.q[0]);
     var qname = req.q[0].name;
     logger.debug("ClusterDNS got a query for", qname);
-    // look for record in kvstore for this name
-    var raddress = this.store.get("/cluster/"+this.config.cluster+"/hosts/"+qname);
+    // look for record in this.kvstore for this name
+    var raddress = this.kvstore.get("/cluster/"+this.config.cluster+"/hosts/"+qname);
     if (!raddress) {
         var found = false;
         // see if address is a vccnode alias
-        var vccalias = this.store.get("/cluster/"+this.config.cluster+"/hosts/"+qname.replace("vccnode", ""));
+        var vccalias = this.kvstore.get("/cluster/"+this.config.cluster+"/hosts/"+qname.replace("vccnode", ""));
         if (vccalias) {
             found = true;
             var raddress = vccalias;
         } else {
             // see if address is a service name, and resolve to service host
-            var services = this.store.list("/cluster/"+this.config.cluster+"/services");
+            var services = this.kvstore.list("/cluster/"+this.config.cluster+"/services");
             if (services) {
                 for (var i = services.length - 1; i >= 0; i--) {
                     if (path.basename(services[i].key) == qname) {
                         // get the record for the host providing this service
-                        var raddress = this.store.get("/cluster/"+this.config.cluster+"/hosts/"+services[i].value);
+                        var raddress = this.kvstore.get("/cluster/"+this.config.cluster+"/hosts/"+services[i].value);
                         if (!raddress) {
                             logger.error("ClusterDNS could not find the host for service", path.basename(services[i].key));
                             res.send();
@@ -98,12 +104,14 @@ ClusterDNS.prototype.handleQuery = function (req, res) {
     res.send();
 }
 
-module.exports = {
-    ClusterDNS: function (service, config, targets) {
-        var deferred = promise();
-        var clusterdns = new ClusterDNS(config.cluster);
-        clusterdns.prependResolv();
-        deferred.resolve();
-        return deferred.promise();
-    }
-};
+
+var clusterdns = new ClusterDNS(vccutil.getConfig());
+// prepend ourselves to /etc/resolv.conf and then bind the server
+clusterdns.prependResolv().then(function () {
+    logger.debug("appended 127.0.0.1 into /etc/resolv.conf");
+}, function () {
+    logger.error("failed to write /etc/resolv.conf");
+    logger.error(err);
+});
+
+clusterdns.bind(53, "127.0.0.1");
