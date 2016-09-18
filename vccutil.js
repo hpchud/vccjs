@@ -5,7 +5,7 @@ var promise = require("deferred");
 
 exports.getConfig = function () {
 	var config = yaml.load('/etc/vcc/cluster.yml');
-	return config.cluster;
+	return config;
 }
 
 exports.writeConfig = function (newconfig) {
