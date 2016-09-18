@@ -5,6 +5,8 @@ var fs = require("fs");
 var network = require("network");
 var promise = require("deferred");
 var yaml = require("yamljs");
+var watcher = require("watchjs");
+var child_process = require('child_process');
 
 var vccutil = require("./vccutil.js");
 var logger = require("./log.js");
@@ -85,10 +87,75 @@ var waitForDependencies = function () {
     return deferred.promise();
 }
 
+var runServiceHooks = function () {
+    var deferred = promise();
+    var hook_dir = "/etc/vcc/service-hooks.d/";
+    // define a function to execute each hook
+    var run_hook = function (service, host) {
+        // check if we have hook for this service
+        var script = hook_dir+service+".sh";
+        logger.debug("looking for service hook for", service);
+        fs.stat(script, function(err, stat) {
+            if(err == null) {
+                // run the hook
+                logger.debug('running service hook for', service, 'with target', host);
+                var proc = child_process.spawn("/bin/sh", [script, host]);
+                proc.on('exit', function (code, signal) {
+                    if (code > 0) {
+                        logger.warn("hook", script, "exited with code", code);
+                    } else {
+                        logger.debug("hook", script, "exited with code", code);
+                    }
+                    // when the hook is complete, set to true and the watcher will wait for all
+                    depends_hooks[service] = true;
+                });
+            } else if(err.code == 'ENOENT') {
+                // no hook installed but thats okay
+                depends_hooks[service] = true;
+                logger.warn('no service hook installed for', service);
+            } else {
+                // something went wrong, should we continue?
+                depends_hooks[service] = true;
+                logger.error('unhandled error hook stat', service);
+            }
+        });
+    }
+    // define a function to wait for all hooks to finish execution
+    var check_hooks = function () {
+        var ready = true;
+        for (var service in depends_hooks) {
+            if (depends_hooks[service] == false) {
+                ready = false
+            }
+        }
+        if (ready) {
+            logger.debug("service hooks are finished");
+            deferred.resolve();
+        } else {
+            logger.debug("service hooks are not finished");
+        }
+    }
+    // register watch for hooks finished
+    watcher.watch(depends_hooks, check_hooks);
+    // for each depends, run the hook
+    for (var service in depends) {
+        run_hook(service, depends[service]);
+    }
+    return deferred.promise();
+}
+
 readDependencies().then(function () {
 	config.kv = new kvstore();
 	config.kv.connect(config.kvstore.host, config.kvstore.port);
-	waitForDependencies().then(function () {
-		logger.info("Dependencies satisfied.");
-	});
+	if(config.depends) {
+		waitForDependencies().then(function () {
+			logger.info("ClusterNode cluster service dependencies satisfied");
+            logger.info("Running cluster service hooks (first-run)");
+            runServiceHooks().then(function () {
+                logger.info("Service hooks complete");
+            });
+		});
+	} else {
+		logger.debug("there are no cluster service dependencies");
+	}
 });
