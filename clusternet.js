@@ -51,8 +51,10 @@ getAddress().then(function (address) {
     logger.info("our hostname is", os.hostname());
     // update the config file with our address and hostname
     var config = vccutil.getConfig();
+    logger.debug("current config is", config);
     config.myhostname = os.hostname();
     config.myaddress = address;
+    logger.debug("going to write config");
     vccutil.writeConfig(config).then(function () {
         logger.info("updated config");
     },
