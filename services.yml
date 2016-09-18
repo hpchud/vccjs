@@ -1,24 +1,34 @@
 ---
 
 clusternet:
-    type: module
-    module: /vccjs/clusternet.js
-    class: ClusterNet
+    type: shell
+    exec: "/usr/bin/env node /vccjs/clusternet.js"
 
 clusterdns:
-    type: module
-    module: /vccjs/clusterdns.js
-    class: ClusterDNS
+    type: daemon
+    node: yes
+    exec: "/vccjs/clusterdns.js"
     requires: clusternet
 
-clusternode:
+loadtargets:
     type: module
-    module: /vccjs/clusternode.js
-    class: ClusterNode
-    requires: clusterdns
+    module: /vccjs/loadtargets.js"
+    class: LoadTargets
+
+wait4deps:
+    type: shell
+    exec: "/usr/bin/env node /vccjs/wait4deps.js"
+    requires: loadtargets
+    provides: clusterstart
+
+registerservice:
+    type: daemon
+    node: yes
+    exec: "/vccjs/registerservice.js"
+    requires: clustertargets
 
 clusterwatcher:
-    type: module
-    module: /vccjs/clusterwatcher.js
-    class: ClusterWatcher
-    requires: clusternode
+    type: daemon
+    node: yes
+    exec: "/vccjs/clusterwatcher.js"
+    requires: clustertargets

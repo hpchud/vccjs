@@ -7,14 +7,19 @@ sshd-priv:
 sshd:
     type: daemon
     exec: /usr/sbin/sshd -D
-    requires: clusternet, sshd-priv
+    requires: clusterstart, sshd-priv
 
 trqauthd:
     type: daemon
     exec: /usr/sbin/trqauthd -D
-    requires: clusternode
+    requires: clusterstart
 
 pbs_mom:
     type: daemon
     exec: /usr/sbin/pbs_mom -D
     requires: trqauthd, clusterwatcher
+
+clustertargets:
+    type: shell
+    exec: "/bin/true"
+    requires: sshd, trqauthd
