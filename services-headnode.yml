@@ -21,6 +21,7 @@ trqauthd:
 pbs_server:
     type: daemon
     exec: /usr/sbin/pbs_server -D
+    restart_limit: -1
     requires: trqauthd
 
 clustertargets:

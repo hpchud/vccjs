@@ -17,6 +17,7 @@ trqauthd:
 pbs_mom:
     type: daemon
     exec: /usr/sbin/pbs_mom -D
+    restart_limit: -1
     requires: trqauthd, clusterwatcher
 
 clustertargets:
