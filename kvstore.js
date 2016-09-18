@@ -3,12 +3,14 @@ var Etcd = require("node-etcd");
 var logger = require("winston");
 
 function VccStore () {
+	this.connected = false;
 }
 
 VccStore.prototype.connect = function (host, port) {
 	var conn = "http://"+host+":"+port;
 	logger.debug("kvstore is connecting to", conn);
 	this.etcd = new Etcd(conn, {timeout: 5000});
+	this.connected = true;
 }
 
 VccStore.prototype.checkResponse = function (res) {
@@ -48,6 +50,9 @@ VccStore.prototype.checkResponse = function (res) {
 }
 
 VccStore.prototype.set = function (key, value, ttl) {
+	if (!this.connected) {
+		throw "kvstore is not connected";
+	}
 	logger.debug("key set:", key, value, ttl);
 	if (ttl) {
 		logger.debug("before set with ttl");
@@ -62,6 +67,9 @@ VccStore.prototype.set = function (key, value, ttl) {
 }
 
 VccStore.prototype.get = function (key) {
+	if (!this.connected) {
+		throw "kvstore is not connected";
+	}
 	logger.debug("key get:", key)
 	var keynode = this.checkResponse(this.etcd.getSync(key));
 	if (keynode) {
@@ -71,12 +79,18 @@ VccStore.prototype.get = function (key) {
 }
 
 VccStore.prototype.watch = function (key) {
+	if (!this.connected) {
+		throw "kvstore is not connected";
+	}
 	// returns an event emitter on change
 	logger.debug("key watch:", key);
 	return this.etcd.watcher(key);
 }
 
 VccStore.prototype.list = function (key) {
+	if (!this.connected) {
+		throw "kvstore is not connected";
+	}
 	logger.debug("key list:", key);
 	var keynode = this.checkResponse(this.etcd.getSync(key, {recursive: true}));
 	if (keynode) {
@@ -86,6 +100,9 @@ VccStore.prototype.list = function (key) {
 }
 
 VccStore.prototype.register = function (key, value, ttl) {
+	if (!this.connected) {
+		throw "kvstore is not connected";
+	}
 	logger.debug("key register:", key, value, ttl, "refresh in", (ttl*1000)-10000, "ms");
 	var me = this;
 	this.set(key, value, ttl);
