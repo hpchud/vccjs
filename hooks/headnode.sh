@@ -10,7 +10,7 @@ echo $1 > /var/spool/torque/server_name
 
 echo "\$pbsserver $1" > /var/spool/torque/mom_priv/config
 echo "\$logevent 255" >> /var/spool/torque/mom_priv/config
-echo "\$mom_host vccnode`hostname`" >> /var/spool/torque/mom_priv/config
+echo "\$mom_host vnode_`hostname`" >> /var/spool/torque/mom_priv/config
 
 # the first run of this hook should be before services start
 # for a context update, we should handle restarting service somehow
