@@ -9,7 +9,7 @@ cat /etc/hosts.vcc | while read line; do
 	if [ "$host" != "`hostname`" ]; then
 		# torque can not handle a hostname that starts with a number,
 		# so we prepend vccnode and ClusterDNS will alias this for us
-		echo "vccnode$host" >> /var/spool/torque/server_priv/nodes
+		echo "vnode_$host" >> /var/spool/torque/server_priv/nodes
 	fi
 done
 

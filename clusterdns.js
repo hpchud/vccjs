@@ -68,8 +68,8 @@ ClusterDNS.prototype.handleQuery = function (req, res) {
     var raddress = this.kvstore.get("/cluster/"+this.config.cluster+"/hosts/"+qname);
     if (!raddress) {
         var found = false;
-        // see if address is a vccnode alias
-        var vccalias = this.kvstore.get("/cluster/"+this.config.cluster+"/hosts/"+qname.replace("vccnode", ""));
+        // see if address is a vnode_ alias
+        var vccalias = this.kvstore.get("/cluster/"+this.config.cluster+"/hosts/"+qname.replace("vnode_", ""));
         if (vccalias) {
             found = true;
             var raddress = vccalias;
