@@ -11,6 +11,8 @@ opt = require('node-getopt').create([
   ['', 'storage-port=PORT', 'port of storage service'],
   ['', 'service=SERVICE', 'for a multi service image, specify the service to start'],
   ['', 'force-address=IP', 'manually set the advertised IP of this instance'],
+  ['', 'privileged', 'run the containers in privileged mode (e.g. for NFS)'],
+  ['', 'hostnet', 'use the host networking model'],
   //['', 'eval', 'format output suitable to eval in the host shell'],
   ['', 'just-yml', 'just dump the generated cluster init.yml and nothing else'],
   ['i', 'info', 'display information about this vcc image'],
@@ -104,7 +106,14 @@ if ((options.version || options.info || options.start)) {
         }
         var b64inityml = new Buffer(yaml.stringify(inityml)).toString('base64');
         // generate command for starting this image
-        var runcommand = "docker run -d --net=host --name=vcc"+options.cluster+" $VCCIMAGE b64inityml="+b64inityml;
+        var runcommand = "docker run -d ";
+        if (options.privileged) {
+            runcommand += "--privileged ";
+        }
+        if (options.hostnet) {
+            runcommand += "--net=host ";
+        }
+        runcommand += "--name=vcc-"+options.cluster+"-"+options.service+" $VCCIMAGE b64inityml="+b64inityml;
         // output the commands in the desired format
         if (options['just-yml']) {
             console.log(yaml.stringify(inityml));
