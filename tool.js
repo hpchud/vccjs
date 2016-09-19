@@ -95,6 +95,9 @@ if ((options.version || options.info || options.start)) {
             inityml.cluster.kvstore.host = "localhost";
             inityml.cluster.kvstore.port = "4001";
         }
+        if(options['force-address']) {
+            inityml.cluster.myaddress = options['force-address'];
+        }
         inityml.cluster.cluster = options.cluster;
         if (options.service) {
             inityml.cluster.service = options.service;
