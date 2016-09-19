@@ -10,6 +10,7 @@ opt = require('node-getopt').create([
   ['', 'storage-host=IP', 'ip address of storage host'],
   ['', 'storage-port=PORT', 'port of storage service'],
   ['', 'service=SERVICE', 'for a multi service image, specify the service to start'],
+  ['', 'force-address=IP', 'manually set the advertised IP of this instance'],
   //['', 'eval', 'format output suitable to eval in the host shell'],
   ['', 'just-yml', 'just dump the generated cluster init.yml and nothing else'],
   ['i', 'info', 'display information about this vcc image'],

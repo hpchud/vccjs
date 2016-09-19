@@ -45,15 +45,19 @@ var getAddress = function () {
     return deferred.promise();
 }
 
+var config = vccutil.getConfig();
 
 getAddress().then(function (address) {
+    logger.debug("current config is", config);
     logger.info("address discovered as", address);
     logger.info("our hostname is", os.hostname());
+    if(config.myaddress) {
+        logger.warn("address is already set to", config.myaddress);
+    } else {
+        config.myaddress = address;
+    }
     // update the config file with our address and hostname
-    var config = vccutil.getConfig();
-    logger.debug("current config is", config);
     config.myhostname = os.hostname();
-    config.myaddress = address;
     logger.debug("going to write config");
     vccutil.writeConfig(config).then(function () {
         logger.info("updated config");
