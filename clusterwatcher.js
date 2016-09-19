@@ -63,13 +63,17 @@ ClusterWatcher.prototype.runClusterHooks = function (hosts) {
             var script = files[i];
             logger.debug("running hook", script);
             var proc = child_process.spawn("/bin/sh", [script]);
-            proc.on('exit', function (code, signal) {
-                if (code > 0) {
-                    logger.warn("hook", script, "exited with code", code);
-                } else {
-                    logger.debug("hook", script, "exited with code", code);
-                }
-            });
+            // preserve script variable in callback because we are
+            // generating callbacks in a loop
+            (function (script) {
+                proc.on('exit', function (code, signal) {
+                    if (code > 0) {
+                        logger.warn("hook", script, "exited with code", code);
+                    } else {
+                        logger.debug("hook", script, "exited with code", code);
+                    }
+                });
+            })(script);
         };
     })
 }
