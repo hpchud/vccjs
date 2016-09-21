@@ -90,7 +90,7 @@ if ((options.version || options.info || options.start)) {
                 storagecommand += "--net=host ";
             }
             if (options.name) {
-                storagecommand += "--name=vcc-"+options.cluster+"-kvstore+" ";
+                storagecommand += "--name=vcc-"+options.cluster+"-kvstore ";
             }
             storagecommand += "quay.io/coreos/etcd:v3.0.8 --listen-client-urls 'http://0.0.0.0:2379,http://0.0.0.0:4001' --advertise-client-urls 'http://0.0.0.0:2379,http://0.0.0.0:4001'";
         }
