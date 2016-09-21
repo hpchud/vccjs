@@ -92,7 +92,7 @@ if ((options.version || options.info || options.start)) {
             if (options.name) {
                 storagecommand += "--name=vcc-"+options.cluster+"-kvstore;
             }
-            storagecommand += "quay.io/coreos/etcd --listen-client-urls 'http://0.0.0.0:2379,http://0.0.0.0:4001' --advertise-client-urls 'http://0.0.0.0:2379,http://0.0.0.0:4001'";
+            storagecommand += "quay.io/coreos/etcd:v3.0.8 --listen-client-urls 'http://0.0.0.0:2379,http://0.0.0.0:4001' --advertise-client-urls 'http://0.0.0.0:2379,http://0.0.0.0:4001'";
         }
         // generate yml config with cluster name and storage details in
         // since the tool is executed within the image itself, we can just look at /etc/init.yml
