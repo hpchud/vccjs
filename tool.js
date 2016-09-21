@@ -84,7 +84,11 @@ if ((options.version || options.info || options.start)) {
         }
         // generate command for starting the storage if we need to
         if (options['start-storage']) {
-            var storagecommand = "docker run -d --name=vccstore"+options.cluster+" --net=host quay.io/coreos/etcd --listen-client-urls 'http://0.0.0.0:2379,http://0.0.0.0:4001' --advertise-client-urls 'http://0.0.0.0:2379,http://0.0.0.0:4001'";
+            var storagecommand = "docker run -d ";
+            if (options.hostnet) {
+                storagecommand += "--net=host ";
+            }
+            storagecommand += "--name=vcc-"+options.cluster+"-kvstore quay.io/coreos/etcd --listen-client-urls 'http://0.0.0.0:2379,http://0.0.0.0:4001' --advertise-client-urls 'http://0.0.0.0:2379,http://0.0.0.0:4001'";
         }
         // generate yml config with cluster name and storage details in
         // since the tool is executed within the image itself, we can just look at /etc/init.yml
