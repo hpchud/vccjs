@@ -13,6 +13,7 @@ opt = require('node-getopt').create([
   ['', 'force-address=IP', 'manually set the advertised IP of this instance'],
   ['', 'privileged', 'run the containers in privileged mode (e.g. for NFS)'],
   ['', 'hostnet', 'use the host networking model'],
+  ['', 'name', 'give container the name vcc-[cluster]-[service] (useful for scripting)'],
   //['', 'eval', 'format output suitable to eval in the host shell'],
   ['', 'just-yml', 'just dump the generated cluster init.yml and nothing else'],
   ['i', 'info', 'display information about this vcc image'],
@@ -88,7 +89,10 @@ if ((options.version || options.info || options.start)) {
             if (options.hostnet) {
                 storagecommand += "--net=host ";
             }
-            storagecommand += "--name=vcc-"+options.cluster+"-kvstore quay.io/coreos/etcd --listen-client-urls 'http://0.0.0.0:2379,http://0.0.0.0:4001' --advertise-client-urls 'http://0.0.0.0:2379,http://0.0.0.0:4001'";
+            if (options.name) {
+                storagecommand += "--name=vcc-"+options.cluster+"-kvstore;
+            }
+            storagecommand += "quay.io/coreos/etcd --listen-client-urls 'http://0.0.0.0:2379,http://0.0.0.0:4001' --advertise-client-urls 'http://0.0.0.0:2379,http://0.0.0.0:4001'";
         }
         // generate yml config with cluster name and storage details in
         // since the tool is executed within the image itself, we can just look at /etc/init.yml
@@ -117,7 +121,10 @@ if ((options.version || options.info || options.start)) {
         if (options.hostnet) {
             runcommand += "--net=host ";
         }
-        runcommand += "--name=vcc-"+options.cluster+"-"+options.service+" $VCCIMAGE b64inityml="+b64inityml;
+        if (options.name) {
+            runcommand += "--name=vcc-"+options.cluster+"-"+options.service+";
+        }
+        runcommand += "$VCCIMAGE b64inityml="+b64inityml;
         // output the commands in the desired format
         if (options['just-yml']) {
             console.log(yaml.stringify(inityml));
