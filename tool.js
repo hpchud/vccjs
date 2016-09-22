@@ -14,6 +14,7 @@ opt = require('node-getopt').create([
   ['', 'privileged', 'run the containers in privileged mode (e.g. for NFS)'],
   ['', 'hostnet', 'use the host networking model'],
   ['', 'name', 'give container the name vcc-[cluster]-[service] (useful for scripting)'],
+  ['', 'bind=PATH', 'bind mount folder from host into container'],
   //['', 'eval', 'format output suitable to eval in the host shell'],
   ['', 'just-yml', 'just dump the generated cluster init.yml and nothing else'],
   ['i', 'info', 'display information about this vcc image'],
@@ -123,6 +124,9 @@ if ((options.version || options.info || options.start)) {
         }
         if (options.name) {
             runcommand += "--name=vcc-"+options.cluster+"-"+options.service+" ";
+        }
+        if (options.bind) {
+            runcommand += "-v "+options.bind+":"+options.bind+" ";
         }
         runcommand += "$VCCIMAGE b64inityml="+b64inityml;
         // output the commands in the desired format
