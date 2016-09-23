@@ -24,6 +24,8 @@ var ClusterWatcher = function (config) {
     this.lasthosts = {};
     // on change handlers
     this.on_change = [this.runClusterHooks];
+    // the timer id for cluster changed
+    this.changed_timeout = null;
 }
 
 ClusterWatcher.prototype.onChange = function (f) {
@@ -78,6 +80,16 @@ ClusterWatcher.prototype.runClusterHooks = function (hosts) {
     })
 }
 
+ClusterWatcher.prototype.clusterChanged = function (currenthosts) {
+    logger.debug("cluster changed, writing hosts");
+    this.writeHosts(currenthosts).then(function () {
+        logger.debug("calling cluster change handlers now");
+        for (var i = this.on_change.length - 1; i >= 0; i--) {
+            this.on_change[i](currenthosts);
+        };
+    });
+}
+
 ClusterWatcher.prototype.watchCluster = function () {
     var me = this;
     var poll_ms = 5000;
@@ -98,6 +110,9 @@ ClusterWatcher.prototype.watchCluster = function () {
     }
     // define a function that is called on the poll interval
     // use the polling strategy instead of watching because it's more stable
+    // once we detect a change, dispatch a timeout to update the cluster in 10 seconds
+    // if another change is detected in the 10 seconds, we cancel that timeout and make
+    // another
     var poll_hosts = function () {
         var hosts = me.kvstore.list("/cluster/"+me.config.cluster+"/hosts");
         if (hosts) {
@@ -107,13 +122,17 @@ ClusterWatcher.prototype.watchCluster = function () {
             if (compare_list(currenthosts, me.lasthosts)) {
                 logger.debug("cluster has not changed");
             } else {
-                logger.debug("cluster has changed, writing hosts");
-                me.writeHosts(currenthosts).then(function () {
-                    logger.debug("calling cluster change handlers now");
-                    for (var i = me.on_change.length - 1; i >= 0; i--) {
-                        me.on_change[i](currenthosts);
-                    };
-                });
+                // is there already a changed timeout?
+                if (me.changed_timeout) {
+                    logger.warn("cluster is not settled, waiting another 10 seconds");
+                    logger.debug("clearing existing timeout for cluster changed event");
+                    clearTimeout(me.changed_timeout);
+                }
+                // dispatch the changed timeout event
+                logger.debug("setting timeout for cluster changed event");
+                (function (currenthosts) {
+                    me.changed_timeout = setTimeout(me.clusterChanged, 10000, currenthosts);
+                })(currenthosts);
             }
             // update host cache
             me.lasthosts = currenthosts;
