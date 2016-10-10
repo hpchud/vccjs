@@ -81,13 +81,7 @@ ClusterWatcher.prototype.runClusterHooks = function (hosts) {
 }
 
 ClusterWatcher.prototype.clusterChanged = function (currenthosts) {
-    logger.debug("cluster changed, writing hosts");
-    this.writeHosts(currenthosts).then(function () {
-        logger.debug("calling cluster change handlers now");
-        for (var i = this.on_change.length - 1; i >= 0; i--) {
-            this.on_change[i](currenthosts);
-        };
-    });
+    
 }
 
 ClusterWatcher.prototype.watchCluster = function () {
@@ -131,7 +125,16 @@ ClusterWatcher.prototype.watchCluster = function () {
                 // dispatch the changed timeout event
                 logger.debug("setting timeout for cluster changed event");
                 (function (currenthosts) {
-                    me.changed_timeout = setTimeout(me.clusterChanged, 10000, currenthosts);
+                    me.changed_timeout = setTimeout(function () {
+                        // cluster changed handler
+                        logger.debug("cluster changed, writing hosts");
+                        me.writeHosts(currenthosts).then(function () {
+                            logger.debug("calling cluster change handlers now");
+                            for (var i = me.on_change.length - 1; i >= 0; i--) {
+                                me.on_change[i](currenthosts);
+                            };
+                        });
+                    }, 10000);
                 })(currenthosts);
             }
             // update host cache
