@@ -15,6 +15,8 @@ opt = require('node-getopt').create([
   ['', 'hostnet', 'use the host networking model'],
   ['', 'name', 'give container the name vcc-[cluster]-[service] (useful for scripting)'],
   ['', 'bind=PATH', 'bind mount folder from host into container'],
+  ['', 'restart', 'set the Docker option to automatically restart container'],
+  ['', 'justdoit', 'set options privileged, hostnet, name, bind=/home, restart'],
   //['', 'eval', 'format output suitable to eval in the host shell'],
   ['', 'just-yml', 'just dump the generated cluster init.yml and nothing else'],
   ['i', 'info', 'display information about this vcc image'],
@@ -78,6 +80,13 @@ if ((options.version || options.info || options.start)) {
             console.error("You must specify a cluster name");
             process.exit(1);
         }
+        if (options.justdoit) {
+            options.privileged = true;
+            options.hostnet = true;
+            options.name = true;
+            options.bind = "/home";
+            options.restart = true;
+        }
         // check we have either --start-storage or --storage-host and --storage-port
         if (!options['start-storage']) {
             if (!(options['storage-host'] && options['storage-port'])) {
@@ -93,7 +102,7 @@ if ((options.version || options.info || options.start)) {
             if (options.name) {
                 storagecommand += "--name=vcc-"+options.cluster+"-kvstore ";
             }
-            storagecommand += "quay.io/coreos/etcd:v3.0.8 --listen-client-urls 'http://0.0.0.0:2379,http://0.0.0.0:4001' --advertise-client-urls 'http://0.0.0.0:2379,http://0.0.0.0:4001'";
+            storagecommand += "quay.io/coreos/etcd:v3.0.8 /usr/local/bin/etcd --listen-client-urls 'http://0.0.0.0:2379,http://0.0.0.0:4001' --advertise-client-urls 'http://0.0.0.0:2379,http://0.0.0.0:4001'";
         }
         // generate yml config with cluster name and storage details in
         // since the tool is executed within the image itself, we can just look at /etc/init.yml
