@@ -27,11 +27,17 @@ var readDependencies = function () {
             // parse the yaml file and put into expected places
             var deps = yaml.load(depfile);
             if (deps[config.service]) {
-                // copy dependencies
-                config.depends = JSON.parse(JSON.stringify(deps[config.service].depends));
+                // copy dependencies if specified
+                if (deps[config.service].depends) {
+                    config.depends = JSON.parse(JSON.stringify(deps[config.service].depends));
+                } else {
+                    logger.warn('No service dependencies specified');
+                }
                 // copy providers if specified
                 if (deps[config.service].providers) {
                     config.providers = JSON.parse(JSON.stringify(deps[config.service].providers));
+                } else {
+                    logger.warn('No service provider targets specified');
                 }
                 // return
                 deferred.resolve();
