@@ -2,10 +2,50 @@
 # the vcc helper script
 # joshua higgins 2016
 
-export VCCIMAGE="kxes/pca2016"
+VCCIMAGE="kxes/pca2016"
+SCRIPTURL="https://raw.githubusercontent.com/joshiggins/vccjs/master/vcc"
 
 if test "$1" = 'update'; then
+	echo ""
+	echo ""
+	echo "*********"
+	echo 'checking for update to script'
+	echo "*********"
+	echo ""
+	echo ""
+	wget -O /usr/bin/vcc $SCRIPTURL
+	if test "$?" = '0'; then
+		echo "OK."
+	else
+			echo ""
+			echo ""
+			echo "*********"
+			echo 'There was a problem updating. Check proxy settings.'
+			echo "*********"
+			echo ""
+			echo ""
+			exit 1
+	fi
+	echo ""
+	echo ""
+	echo "*********"
+	echo 'pulling docker images'
+	echo "*********"
+	echo ""
+	echo ""
 	docker pull $VCCIMAGE
+	if test "$?" = '0'; then
+		echo "OK."
+	else
+			echo ""
+			echo ""
+			echo "*********"
+			echo 'There was a problem updating. Check proxy settings.'
+			echo "*********"
+			echo ""
+			echo ""
+			exit 1
+	fi
 	exit 0
 fi
 
@@ -16,8 +56,6 @@ if test "$1" = 'tool'; then
 		docker run --rm -it $VCCIMAGE $@
 	fi
 fi
-
-
 
 if test "$1" = 'shell'; then
 	nids="`docker ps | grep $VCCIMAGE | awk '{print $1}' | wc -l`"
