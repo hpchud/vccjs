@@ -10,9 +10,14 @@ if test "$1" = 'update'; then
 fi
 
 if test "$1" = 'tool'; then
-	docker run --rm -it $VCCIMAGE $@
-	exit 0
+	if test "$2" = '--start'; then
+		eval $(docker run --rm -it $VCCIMAGE $@)
+	else
+		docker run --rm -it $VCCIMAGE $@
+	fi
 fi
+
+
 
 if test "$1" = 'shell'; then
 	nids="`docker ps | grep $VCCIMAGE | awk '{print $1}' | wc -l`"
@@ -31,4 +36,5 @@ if test "$1" = 'shell'; then
 		echo "error: there is more than 1 VCC container running on this host"
 		echo "use docker exec command to enter the container's shell"
 	fi
+	exit 0
 fi
