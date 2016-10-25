@@ -1,0 +1,34 @@
+#!/bin/sh
+# the vcc helper script
+# joshua higgins 2016
+
+export VCCIMAGE="kxes/pca2016"
+
+if test "$1" = 'update'; then
+	docker pull $VCCIMAGE
+	exit 0
+fi
+
+if test "$1" = 'tool'; then
+	docker run --rm -it $VCCIMAGE $@
+	exit 0
+fi
+
+if test "$1" = 'shell'; then
+	nids="`docker ps | grep $VCCIMAGE | awk '{print $1}' | wc -l`"
+	if test "$nids" = '1'; then
+		id="`docker ps | grep $VCCIMAGE | awk '{print $1}'`"
+		echo ""
+		echo ""
+		echo "*********"
+		echo "You are now entering the VCC shell for $id"
+		echo "To exit, type \`exit\` or press CTRL+D"
+		echo "*********"
+		echo ""
+		echo ""
+		docker exec -it $id /bin/bash
+	else
+		echo "error: there is more than 1 VCC container running on this host"
+		echo "use docker exec command to enter the container's shell"
+	fi
+fi
