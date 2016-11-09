@@ -20,8 +20,8 @@ var ClusterDNS = function (config) {
     logger.debug(config);
     logger.info("ClusterDNS initialised with config", config);
     // simple cache
-    var cache = {};
-    var cache_ttl = 60;
+    this.cache = {};
+    this.cache_ttl = 60;
     // connect kvstore
     this.kvstore = new kvstore();
     this.kvstore.connect(config.kvstore.host, config.kvstore.port);
@@ -65,7 +65,8 @@ ClusterDNS.prototype.addCached = function (name, address) {
 
 ClusterDNS.prototype.getCached = function (name) {
     // check if exists in cache
-    if (this.cache[name]) {
+    // this could be faster because 'in' operator is quite slow
+    if (name in this.cache) {
         // check if current time is less than cached time + ttl
         if (Math.floor(new Date() / 1000) < (this.cache[name].time)+this.cache_ttl) {
             // cached record is valid
@@ -79,7 +80,7 @@ ClusterDNS.prototype.getCached = function (name) {
     }
 }
 
-ClusterDNS.prototype.completeQuery = function (raddress, req, res) {
+ClusterDNS.prototype.completeQuery = function (raddress, qname, res) {
     // prepare response
     logger.info("ClusterDNS looked up to", raddress);
     res.header.qr = 1;
@@ -109,21 +110,21 @@ ClusterDNS.prototype.handleQuery = function (req, res) {
     // look for record in cache
     var raddress = this.getCached(qname);
     if (raddress) {
-        completeQuery(raddress, req, res);
+        this.completeQuery(raddress, qname, res);
         return;
     }
 
     // look for record in this.kvstore for this name
     var raddress = this.kvstore.get("/cluster/"+this.config.cluster+"/hosts/"+qname);
     if (raddress) {
-        completeQuery(raddress, req, res);
+        this.completeQuery(raddress, qname, res);
         return;
     }
 
     // see if address is a vnode_ alias
     var raddress = this.kvstore.get("/cluster/"+this.config.cluster+"/hosts/"+qname.replace("vnode_", ""));
     if (raddress) {
-        completeQuery(raddress, req, res);
+        this.completeQuery(raddress, qname, res);
         return;
     }
 
@@ -144,7 +145,7 @@ ClusterDNS.prototype.handleQuery = function (req, res) {
         };
     }
     if (raddress) {
-        completeQuery(raddress, req, res);
+        this.completeQuery(raddress, qname, res);
         return;
     }
 
