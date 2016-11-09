@@ -19,6 +19,9 @@ var ClusterDNS = function (config) {
     this.config = config;
     logger.debug(config);
     logger.info("ClusterDNS initialised with config", config);
+    // simple cache
+    var cache = {};
+    var cache_ttl = 60;
     // connect kvstore
     this.kvstore = new kvstore();
     this.kvstore.connect(config.kvstore.host, config.kvstore.port);
@@ -52,6 +55,43 @@ ClusterDNS.prototype.prependResolv = function () {
     return deferred.promise();
 }
 
+ClusterDNS.prototype.addCached = function (name, address) {
+    var record = {
+        "address": address,
+        "time": Math.floor(new Date() / 1000)
+    };
+    this.cache[name] = record;
+}
+
+ClusterDNS.prototype.getCached = function (name) {
+    // check if exists in cache
+    if (this.cache[name]) {
+        // check if current time is less than cached time + ttl
+        if (Math.floor(new Date() / 1000) < (this.cache[name].time)+this.cache_ttl) {
+            // cached record is valid
+            return this.cache[name].address;
+        } else {
+            // cached record is invalid
+            return false;
+        }
+    } else {
+        return false;
+    }
+}
+
+ClusterDNS.prototype.completeQuery = function (raddress, req, res) {
+    // prepare response
+    logger.info("ClusterDNS looked up to", raddress);
+    res.header.qr = 1;
+    res.header.ra = 1;
+    res.header.rd = 0;
+    res.header.ancount = 1;
+    res.header.nscount = 0;
+    res.header.arcount = 0;
+    res.addRR(qname, 1, "IN", "A", raddress);
+    res.send();
+}
+
 ClusterDNS.prototype.handleQuery = function (req, res) {
     res.setHeader(req.header);
     // check we only got 1 question in this query
@@ -63,53 +103,55 @@ ClusterDNS.prototype.handleQuery = function (req, res) {
     // find the query name
     res.addQuestion(req.q[0]);
     var qname = req.q[0].name;
+    // how should we handle the domain component?
     logger.debug("ClusterDNS got a query for", qname);
+
+    // look for record in cache
+    var raddress = this.getCached(qname);
+    if (raddress) {
+        completeQuery(raddress, req, res);
+        return;
+    }
+
     // look for record in this.kvstore for this name
     var raddress = this.kvstore.get("/cluster/"+this.config.cluster+"/hosts/"+qname);
-    if (!raddress) {
-        var found = false;
-        // see if address is a vnode_ alias
-        var vccalias = this.kvstore.get("/cluster/"+this.config.cluster+"/hosts/"+qname.replace("vnode_", ""));
-        if (vccalias) {
-            found = true;
-            var raddress = vccalias;
-        } else {
-            // see if address is a service name, and resolve to service host
-            var services = this.kvstore.list("/cluster/"+this.config.cluster+"/services");
-            if (services) {
-                for (var i = services.length - 1; i >= 0; i--) {
-                    if (path.basename(services[i].key) == qname) {
-                        // get the record for the host providing this service
-                        var raddress = this.kvstore.get("/cluster/"+this.config.cluster+"/hosts/"+services[i].value);
-                        if (!raddress) {
-                            logger.error("ClusterDNS could not find the host for service", path.basename(services[i].key));
-                            res.send();
-                            return;
-                        } else {
-                            found = true;
-                        }
-                        break;
-                    }
-                };
-            }
-        }
-        // else reject
-        if (!found) {
-            logger.warn("ClusterDNS has no record for", qname, ", rejecting");
-            res.send();
-            return;
-        }
+    if (raddress) {
+        completeQuery(raddress, req, res);
+        return;
     }
-    // prepare response
-    logger.info("ClusterDNS looked up", qname, "to", raddress);
-    res.header.qr = 1;
-    res.header.ra = 1;
-    res.header.rd = 0;
-    res.header.ancount = 1;
-    res.header.nscount = 0;
-    res.header.arcount = 0;
-    res.addRR(qname, 1, "IN", "A", raddress);
+
+    // see if address is a vnode_ alias
+    var raddress = this.kvstore.get("/cluster/"+this.config.cluster+"/hosts/"+qname.replace("vnode_", ""));
+    if (raddress) {
+        completeQuery(raddress, req, res);
+        return;
+    }
+
+    // see if address is a service name, and resolve to service host
+    var services = this.kvstore.list("/cluster/"+this.config.cluster+"/services");
+    if (services) {
+        for (var i = services.length - 1; i >= 0; i--) {
+            if (path.basename(services[i].key) == qname) {
+                // get the record for the host providing this service
+                var raddress = this.kvstore.get("/cluster/"+this.config.cluster+"/hosts/"+services[i].value);
+                if (!raddress) {
+                    logger.error("ClusterDNS could not find the host for service", path.basename(services[i].key));
+                    res.send();
+                    return;
+                }
+                break;
+            }
+        };
+    }
+    if (raddress) {
+        completeQuery(raddress, req, res);
+        return;
+    }
+
+    // else reject
+    logger.warn("ClusterDNS has no record for", qname, ", rejecting");
     res.send();
+    return;
 }
 
 
