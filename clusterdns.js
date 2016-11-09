@@ -73,6 +73,8 @@ ClusterDNS.prototype.getCached = function (name) {
             return this.cache[name].address;
         } else {
             // cached record is invalid
+            // remove it, let it be cleaned up. but what if it is never queried again?
+            this.cache[name] = undefined;
             return false;
         }
     } else {
