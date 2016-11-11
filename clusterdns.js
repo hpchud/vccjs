@@ -14,36 +14,24 @@ var dgram = require('dgram');
 var ndns = require('./ndns.js');
 
 
-var ClusterDNS = function (config) {
-    // load the config file
-    this.config = config;
-    logger.debug(config);
-    logger.info("ClusterDNS initialised with config", config);
-    // simple cache
-    this.cache = {};
-    this.cache_ttl = 60;
-    // connect kvstore
-    this.kvstore = new kvstore();
-    this.kvstore.connect(config.kvstore.host, config.kvstore.port);
-    // start up the server
-    this.server = ndns.createServer('udp4');
-    this.client = ndns.createClient('udp4');
-    this.server.on("request", (this.handleQuery).bind(this));
-    // register our name
-    this.registerName();
+var config = vccutil.getConfig();
+logger.info("ClusterDNS initialised with config", config);
+
+
+var cache = {};
+var cache_ttl = 60;
+
+// connect kv store
+var kv = new kvstore();
+kv.connect(config.kvstore.host, config.kvstore.port);
+
+
+var registerName = function () {
+    var key = "/cluster/"+config.cluster+"/hosts/"+config.myhostname;
+    kv.register(key, config.myaddress, 60);
 }
 
-ClusterDNS.prototype.bind = function (port, ip) {
-    logger.info("ClusterDNS listening on", port, ip);
-    this.server.bind(port, ip);
-}
-
-ClusterDNS.prototype.registerName = function () {
-    var key = "/cluster/"+this.config.cluster+"/hosts/"+this.config.myhostname;
-    this.kvstore.register(key, this.config.myaddress, 60);
-}
-
-ClusterDNS.prototype.prependResolv = function () {
+var prependResolv = function () {
     var deferred = promise();
     // this function adds ourself to the top of /etc/resolv.conf
     prependFile('/etc/resolv.conf', 'nameserver 127.0.0.1\n', function(err) {
@@ -55,34 +43,7 @@ ClusterDNS.prototype.prependResolv = function () {
     return deferred.promise();
 }
 
-ClusterDNS.prototype.addCached = function (name, address) {
-    var record = {
-        "address": address,
-        "time": Math.floor(new Date() / 1000)
-    };
-    this.cache[name] = record;
-}
-
-ClusterDNS.prototype.getCached = function (name) {
-    // check if exists in cache
-    // this could be faster because 'in' operator is quite slow
-    if (name in this.cache) {
-        // check if current time is less than cached time + ttl
-        if (Math.floor(new Date() / 1000) < (this.cache[name].time)+this.cache_ttl) {
-            // cached record is valid
-            return this.cache[name].address;
-        } else {
-            // cached record is invalid
-            // remove it, let it be cleaned up. but what if it is never queried again?
-            this.cache[name] = undefined;
-            return false;
-        }
-    } else {
-        return false;
-    }
-}
-
-ClusterDNS.prototype.completeQuery = function (raddress, qname, res) {
+var completeQuery = function (raddress, qname, res) {
     // prepare response
     logger.info("ClusterDNS looked up to", raddress);
     res.header.qr = 1;
@@ -95,7 +56,26 @@ ClusterDNS.prototype.completeQuery = function (raddress, qname, res) {
     res.send();
 }
 
-ClusterDNS.prototype.handleQuery = function (req, res) {
+var getFromCache = function (qname) {
+    var deferred = promise();
+    // no cache for now
+    deferred.resolve(false);
+    return deferred.promise();
+}
+
+var getFromKV = function (key) {
+    // the purpose of this promise is to handle a rejection from the kv store promise
+    // because any error occured will reject the 'some' lookup promise
+    var deferred = promise();
+    kv.get(key).then(function (value) {
+        deferred.resolve(value);
+    }, function (err) {
+        deferred.resolve(false);
+    });
+    return deferred.promise();
+}
+
+var handleQuery = function (req, res) {
     res.setHeader(req.header);
     // check we only got 1 question in this query
     if(req.q.length > 1) {
@@ -106,65 +86,34 @@ ClusterDNS.prototype.handleQuery = function (req, res) {
     // find the query name
     res.addQuestion(req.q[0]);
     var qname = req.q[0].name;
-    // how should we handle the domain component?
     logger.debug("ClusterDNS got a query for", qname);
 
-    // look for record in cache
-    var raddress = this.getCached(qname);
-    if (raddress) {
-        this.completeQuery(raddress, qname, res);
-        return;
-    }
+    // we should execute our promises in parallel for each possible lookup option,
+    // but this will do for now
+    promise.some([
+        getFromCache(qname),
+        getFromCache(qname.replace("vnode_", "")),
+        getFromKV("/cluster/"+config.cluster+"/hosts/"+qname),
+        getFromKV("/cluster/"+config.cluster+"/hosts/"+qname.replace("vnode_", "")),
+        getFromKV("/cluster/"+config.cluster+"/services/"+qname)
+    ], function (raddress) {
+        if (raddress) {
+            logger.debug("a promise resolved this address to", raddress);
+            completeQuery(raddress, qname, res);
+            // stop further processing
+            return true;
+        }
+    });
+};
 
-    // look for record in this.kvstore for this name
-    var raddress = this.kvstore.get("/cluster/"+this.config.cluster+"/hosts/"+qname);
-    if (raddress) {
-        this.completeQuery(raddress, qname, res);
-        return;
-    }
+// start the dns server
+var server = ndns.createServer('udp4');
+server.on("request", handleQuery);
+server.bind(53, "127.0.0.1");
+logger.info("ClusterDNS is listening on port 53");
 
-    // see if address is a vnode_ alias
-    var raddress = this.kvstore.get("/cluster/"+this.config.cluster+"/hosts/"+qname.replace("vnode_", ""));
-    if (raddress) {
-        this.completeQuery(raddress, qname, res);
-        return;
-    }
+// register our name
+//registerName();
 
-    // see if address is a service name, and resolve to service host
-    var services = this.kvstore.list("/cluster/"+this.config.cluster+"/services");
-    if (services) {
-        for (var i = services.length - 1; i >= 0; i--) {
-            if (path.basename(services[i].key) == qname) {
-                // get the record for the host providing this service
-                var raddress = this.kvstore.get("/cluster/"+this.config.cluster+"/hosts/"+services[i].value);
-                if (!raddress) {
-                    logger.error("ClusterDNS could not find the host for service", path.basename(services[i].key));
-                    res.send();
-                    return;
-                }
-                break;
-            }
-        };
-    }
-    if (raddress) {
-        this.completeQuery(raddress, qname, res);
-        return;
-    }
-
-    // else reject
-    logger.warn("ClusterDNS has no record for", qname, ", rejecting");
-    res.send();
-    return;
-}
-
-
-var clusterdns = new ClusterDNS(vccutil.getConfig());
-// prepend ourselves to /etc/resolv.conf and then bind the server
-clusterdns.prependResolv().then(function () {
-    logger.debug("appended 127.0.0.1 into /etc/resolv.conf");
-}, function () {
-    logger.error("failed to write /etc/resolv.conf");
-    logger.error(err);
-});
-
-clusterdns.bind(53, "127.0.0.1");
+// prepend ourself to /etc/resolv.conf
+//prependResolv();
