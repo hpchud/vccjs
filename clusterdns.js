@@ -93,9 +93,7 @@ var handleQuery = function (req, res) {
     // execute promises in parallel for each possible lookup option
     // if the kvstore responds faster than our cache, so be it
     promise.some([
-        getFromCache(qname),
         getFromCache(qname.replace("vnode_", "")),
-        getFromKV("/cluster/"+config.cluster+"/hosts/"+qname),
         getFromKV("/cluster/"+config.cluster+"/hosts/"+qname.replace("vnode_", "")),
         getFromKV("/cluster/"+config.cluster+"/services/"+qname)
     ], function (raddress) {
