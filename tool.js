@@ -11,6 +11,7 @@ opt = require('node-getopt').create([
   ['', 'storage-port=PORT', 'port of storage service'],
   ['', 'service=SERVICE', 'for a multi service image, specify the service to start'],
   ['', 'force-address=IP', 'manually set the advertised IP of this instance'],
+  ['', 'no-dns', 'don\'t use the ClusterDNS service'],
   ['', 'privileged', 'run the containers in privileged mode (e.g. for NFS)'],
   ['', 'hostnet', 'use the host networking model'],
   ['', 'name', 'give container the name vcc-[cluster]-[service] (useful for scripting)'],
@@ -118,6 +119,9 @@ if ((options.version || options.info || options.start)) {
         }
         if(options['force-address']) {
             inityml.cluster.myaddress = options['force-address'];
+        }
+        if(options['no-dns']) {
+            inityml.cluster.nodns = true;
         }
         inityml.cluster.cluster = options.cluster;
         if (options.service) {

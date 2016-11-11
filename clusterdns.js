@@ -112,14 +112,18 @@ var handleQuery = function (req, res) {
     });
 };
 
-// start the dns server
-var server = ndns.createServer('udp4');
-server.on("request", handleQuery);
-server.bind(53, "127.0.0.1");
-logger.info("ClusterDNS is listening on port 53");
+if (!config.nodns) {
+    // start the dns server
+    var server = ndns.createServer('udp4');
+    server.on("request", handleQuery);
+    server.bind(53, "127.0.0.1");
+    logger.info("ClusterDNS is listening on port 53");
+    // prepend ourself to /etc/resolv.conf
+    //prependResolv();
+} else {
+    logger.warn("Not using ClusterDNS service, make sure an alternative for name resolution is available.");
+}
 
 // register our name
 //registerName();
 
-// prepend ourself to /etc/resolv.conf
-//prependResolv();
