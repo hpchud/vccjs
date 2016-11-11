@@ -68,6 +68,7 @@ var getFromKV = function (key) {
     // because any error occured will reject the 'some' lookup promise
     var deferred = promise();
     kv.get(key).then(function (value) {
+        // update the cache here too
         deferred.resolve(value);
     }, function (err) {
         deferred.resolve(false);
@@ -88,8 +89,8 @@ var handleQuery = function (req, res) {
     var qname = req.q[0].name;
     logger.debug("ClusterDNS got a query for", qname);
 
-    // we should execute our promises in parallel for each possible lookup option,
-    // but this will do for now
+    // execute promises in parallel for each possible lookup option
+    // if the kvstore responds faster than our cache, so be it
     promise.some([
         getFromCache(qname),
         getFromCache(qname.replace("vnode_", "")),
@@ -103,6 +104,9 @@ var handleQuery = function (req, res) {
             // stop further processing
             return true;
         }
+    }).then(function () {
+        logger.debug("could not look up this query");
+        res.send();
     });
 };
 
