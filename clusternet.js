@@ -10,7 +10,6 @@ var logger = require("./log.js");
 // convert async network functions to promises
 var getInterfacesList = promise.promisify(network.get_interfaces_list);
 var getActiveInterface = promise.promisify(network.get_active_interface);
-0
 
 var config = vccutil.getConfig();
 logger.debug("current config is", config);
