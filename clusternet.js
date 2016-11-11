@@ -64,6 +64,7 @@ getAddress().then(function (address) {
     logger.info("our IP address is", address);
     logger.info("our hostname is", os.hostname());
     // update the config file with our address and hostname
+    config.myaddress = address;
     config.myhostname = os.hostname();
     logger.debug("going to write config");
     vccutil.writeConfig(config).then(function () {
