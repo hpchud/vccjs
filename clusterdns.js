@@ -77,6 +77,7 @@ var getFromKV = function (key) {
 }
 
 var handleQuery = function (req, res) {
+    var resolved = false;
     res.setHeader(req.header);
     // check we only got 1 question in this query
     if(req.q.length > 1) {
@@ -101,12 +102,15 @@ var handleQuery = function (req, res) {
         if (raddress) {
             logger.debug("a promise resolved this address to", raddress);
             completeQuery(raddress, qname, res);
+            resolved = true;
             // stop further processing
             return true;
         }
     }).then(function () {
-        logger.debug("could not look up this query");
-        res.send();
+        if (!resolved) {
+            logger.debug("could not look up this query");
+            res.send();
+        }
     });
 };
 
