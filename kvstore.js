@@ -38,7 +38,7 @@ VccStore.prototype.set = function (key, value, ttl) {
 	return deferred.promise();
 }
 
-VccStore.prototype.get = function (key, recursive) {
+VccStore.prototype.get = function (key, recursive, recursive_with_vals) {
 	var deferred = promise();
 	var me = this;
 	if (!this.connected) {
@@ -58,12 +58,23 @@ VccStore.prototype.get = function (key, recursive) {
 			if (res.node) {
 				if (recursive) {
 					if (res.node.nodes) {
-						// convert a list of objects into a list
+						// convert a list of objects into the required format
 						// only show the base name of the full path
-						var listresult = res.node.nodes.reduce(function (r, i) {
-							r.push(path.basename(i.key));
-							return r;
-						}, []);
+						if (recursive_with_vals) {
+							// we need an object with {key: value}
+							var listresult = res.node.nodes.reduce(function (r, i) {
+								if (!i.dir) {
+									r[path.basename(i.key)] = i.value;
+								}
+								return r;
+							}, {});
+						} else {
+							// we just need list of keys
+							var listresult = res.node.nodes.reduce(function (r, i) {
+								r.push(path.basename(i.key));
+								return r;
+							}, []);
+						}
 						deferred.resolve(listresult);
 					} else {
 						deferred.reject("recursive, expecting nodes but didn't get any");
@@ -98,9 +109,10 @@ VccStore.prototype.watch = function (key) {
 	return deferred.promise();
 }
 
-VccStore.prototype.list = function (key) {
+VccStore.prototype.list = function (key, with_vals) {
 	// call the get function with recursive option
-	return this.get(key, true);
+	// with_vals allows us to get the values when listing in the same call
+	return this.get(key, true, with_vals);
 }
 
 VccStore.prototype.register = function (key, value, ttl) {
