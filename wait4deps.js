@@ -93,7 +93,7 @@ var waitForDependencies = function () {
             var depends_status = result.reduce(function (r, i) {
                 r[i[0]] = i[1];
                 return r;
-            });
+            }, {});
             // now check to see if all services are ready
             var ready = true;
             for (var depend in depends_status) {
