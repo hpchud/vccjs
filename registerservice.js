@@ -14,11 +14,11 @@ var config = vccutil.getConfig();
 logger.debug(config);
 if(config.providers) {
 	// open kvstore
-	var store = new kvstore();
-	store.connect(config.kvstore.host, config.kvstore.port);
+	var kv = new kvstore();
+	kv.connect(config.kvstore.host, config.kvstore.port);
 	// register the service key
 	logger.debug("Registering service:", config.service);
-	store.register("/cluster/"+config.cluster+"/services/"+config.service, config.myhostname, 60);
+	kv.register("/cluster/"+config.cluster+"/services/"+config.service, config.myhostname, 60);
 	logger.debug("service registered:", config.service)
 } else {
 	logger.info("There is no service to register.")

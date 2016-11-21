@@ -119,11 +119,14 @@ if (!config.nodns) {
     server.bind(53, "127.0.0.1");
     logger.info("ClusterDNS is listening on port 53");
     // prepend ourself to /etc/resolv.conf
-    //prependResolv();
+    prependResolv().then(function () {
+        logger.info("appended 127.0.0.1 to /etc/resolv.conf");
+    }, function (err) {
+        logger.error("could not prepend /etc/resolv.conf", err);
+    });
 } else {
     logger.warn("Not using ClusterDNS service, make sure an alternative for name resolution is available.");
 }
 
 // register our name
-//registerName();
-
+registerName();

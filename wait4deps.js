@@ -17,9 +17,13 @@ var depends = {};
 var depends_hooks = {};
 
 
+// open the kvstore
+kv = new kvstore();
+kv.connect(config.kvstore.host, config.kvstore.port);
+
+
 var readDependencies = function () {
     var deferred = promise();
-    var me = this;
     var depfile = "/etc/vcc/dependencies.yml";
     logger.debug('reading dependency file', depfile);
     fs.stat(depfile, function(err, stat) {
@@ -56,37 +60,56 @@ var readDependencies = function () {
     return deferred.promise();
 }
 
+var getServiceFromKV = function (service) {
+    var deferred = promise();
+    // the key we want
+    var key = "/cluster/"+config.cluster+"/services/"+service;
+    kv.get(key).then(function (value) {
+        // update the cache here too
+        deferred.resolve([service, value]);
+    }, function (err) {
+        deferred.resolve(false);
+    });
+    return deferred.promise();
+}
+
 var waitForDependencies = function () {
-    var me = this;
     var deferred = promise();
     var poll_ms = 2000;
     // populate depends and depends_hooks
     for (var i = config.depends.length - 1; i >= 0; i--) {
-        depends[config.depends[i]] = false;
+        //depends[config.depends[i]] = false;
         depends_hooks[config.depends[i]] = false;
     };
-    logger.debug("waiting for cluster service dependencies", depends);
+    logger.debug("waiting for cluster service dependencies", config.depends);
     // define function to check the depends object
     var check_depends = function () {
-        logger.debug(depends);
-        var ready = true;
-        for (var depend in depends) {
-            if (depends[depend] == false) {
-                var value = config.kv.get("/cluster/"+config.cluster+"/services/"+depend);
-                if (value) {
-                    logger.debug("found service", depend, "on", value);
-                    // save the host providing this service
-                    depends[depend] = value;
-                } else {
+        promise.map(config.depends, function (depend) {
+            return getServiceFromKV(depend);
+        })(function (result) {
+            // the result is a list like:
+            // [ [ 'dep1', 'false' ], [ 'dep2', 'headnode' ] ]
+            // convert into something more useable
+            var depends_status = result.reduce(function (r, i) {
+                r[i[0]] = i[1];
+                return r;
+            });
+            // now check to see if all services are ready
+            var ready = true;
+            for (var depend in depends_status) {
+                if (depends_status[depend] == false) {
+                    logger.debug("cluster service dependency", depend, "is not ready")
                     ready = false;
+                } else {
+                    logger.debug("cluster service dependency", depend, "is running on", depends_status[depend]);
                 }
             }
-        }
-        if (ready) {
-            deferred.resolve();
-        } else {
-            setTimeout(check_depends, poll_ms);
-        }
+            if (ready) {
+                deferred.resolve()
+            } else {
+                setTimeout(check_depends, poll_ms);
+            }
+        });
     };
     // poll for status changes
     setTimeout(check_depends, poll_ms);
@@ -154,9 +177,6 @@ readDependencies().then(function () {
     // save the new config
     vccutil.writeConfig(config).then(function () {
         logger.info("Updated configuration");
-        // open the kvstore
-        config.kv = new kvstore();
-        config.kv.connect(config.kvstore.host, config.kvstore.port);
         // if we have dependencies, wait for them
         if(config.depends) {
             waitForDependencies().then(function () {
