@@ -19,17 +19,16 @@ logger.debug("current config is", config);
 
 var getAddress = function () {
     var deferred = promise();
-    // run both get interfaces and get active interface in a promise group
-    // this means we avoid nesting promises which is ugly
-    promise(getInterfacesList(), getActiveInterface())(function (result) {
+
+    getInterfacesList().then(function (interfaces_list) {
         // convert interfaces list into something we can work with
-        var name_to_ip = result[0].reduce(function (r, i) {
+        var name_to_ip = interfaces_list.reduce(function (r, i) {
             if (i.ip_address) {
                 r[i.name] = i.ip_address;
             }
             return r;
         }, {});
-        var ip_to_name = result[0].reduce(function (r, i) {
+        var ip_to_name = interfaces_list.reduce(function (r, i) {
             if (i.ip_address) {
                 r[i.ip_address] = i.name;
             }
@@ -52,10 +51,17 @@ var getAddress = function () {
         } else {
             logger.debug("there is no weave interface");
         }
-        // detect the active interface as last resort
-        logger.debug("active interface is", result[1].name);
-        deferred.resolve(result[1].ip_address);
-    }).done();
+        // detect the active interface
+        getActiveInterface().then(function (active_interface) {
+            logger.debug("active interface is", active_interface.name);
+            deferred.resolve(active_interface.ip_address);
+        }, function (err) {
+            logger.warn("could not determine active interface");
+            logger.warn("using first available interface", interfaces_list[0].name);
+            deferred.resolve(interfaces_list[0].ip_address);
+        });
+    });
+
     return deferred.promise();
 }
 
