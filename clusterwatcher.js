@@ -85,23 +85,37 @@ var runClusterHooks = function (hosts) {
                 return r+i;
             }, 0);
             if (sum > 0) {
-                logger.error("some hooks did not run successfully");
+                logger.warn("some hooks did not run successfully");
             } else {
                 logger.debug("all hooks finished", result);
             }
+            deferred.resolve(sum);
         });
     }, function (err) {
-        logger.error("could not enumerate cluster hooks", err);
+        logger.error("could not enumerate cluster hooks");
+        deferred.reject(err);
     });
     return deferred.promise();
 }
 
 var watchCluster = function () {
-    kv.list("/cluster/"+config.cluster+"/hosts", true).then(function (currenthosts) {
+    kv.list("/cluster/"+config.cluster+"/hosts", true).then(function (hosts) {
+        // sort the host list
+        var currenthosts = Object.keys(hosts).sort().reduce(function (result, key) {
+            result[key] = hosts[key];
+            return result;
+        }, {});
         logger.debug(Object.keys(currenthosts).length, "hosts in cluster");
+        // compare with lasthosts
         if (JSON.stringify(currenthosts) === JSON.stringify(lasthosts)) {
             logger.debug("cluster has not changed");
+            // cluster not changed, schedule next loop
+            lasthosts = currenthosts;
+            setTimeout(watchCluster, poll_ms);
         } else {
+            // cluster has changed
+            // see if it changed before we managed to run the hooks from the last change
+            // and if so, do not run the hooks from the last change
             if (changed_timeout) {
                 logger.warn("cluster is not settled, changed before we ran handlers");
                 logger.debug("clearing existing timeout for cluster changed event");
@@ -115,20 +129,20 @@ var watchCluster = function () {
                     logger.debug("run cluster changed event");
                     logger.debug("writing hosts");
                     writeHosts(currenthosts).then(function () {
-                        logger.debug("calling cluster change handlers now");
-                        for (var i = on_change.length - 1; i >= 0; i--) {
-                            on_change[i](currenthosts);
-                        };
+                        logger.debug("written /etc/hosts.vcc");
+                        logger.debug("running cluster hooks now");
+                        // run cluster hooks
+                        runClusterHooks(currenthosts).then(function () {
+                            // cluster hooks done, schedule next loop
+                            lasthosts = currenthosts;
+                            setTimeout(watchCluster, poll_ms);
+                        })
                     }, function (err) {
                         logger.error("could not write /etc/hosts.vcc", err);
                     });
                 }, settle_ms);
             })(currenthosts);
         }
-        // save these hosts as the last hosts for next loop
-        lasthosts = currenthosts;
-        // schedule the next loop
-        setTimeout(watchCluster, poll_ms);
     }, function (err) {
         logger.error("could not enumerate hosts in the cluster", err);
     }).done();
