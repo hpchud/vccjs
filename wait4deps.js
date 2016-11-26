@@ -17,8 +17,8 @@ var fileStat = promise.promisify(fs.stat);
 
 
 var config = vccutil.getConfig();
-var depends = {};
-var depends_hooks = {};
+var depends = [];
+var hook_dir = "/etc/vcc/service-hooks.d/";
 
 
 // open the kvstore
@@ -80,11 +80,6 @@ var getServiceFromKV = function (service) {
 var waitForDependencies = function () {
     var deferred = promise();
     var poll_ms = 2000;
-    // populate depends and depends_hooks
-    for (var i = config.depends.length - 1; i >= 0; i--) {
-        //depends[config.depends[i]] = false;
-        depends_hooks[config.depends[i]] = false;
-    };
     logger.debug("waiting for cluster service dependencies", config.depends);
     // define function to check the depends object
     var check_depends = function () {
@@ -109,6 +104,7 @@ var waitForDependencies = function () {
                 }
             }
             if (ready) {
+                depends = result;
                 deferred.resolve()
             } else {
                 setTimeout(check_depends, poll_ms);
@@ -120,75 +116,46 @@ var waitForDependencies = function () {
     return deferred.promise();
 }
 
-var runHook = function (script) {
+var runHook = function (service, host) {
     var deferred = promise();
-    var proc = child_process.spawn("/bin/sh", [script]);
-    // start script and resolve once it exits
-    proc.on('exit', function (code, signal) {
-        if (code > 0) {
-            logger.warn("hook", script, "exited with code", code);
-        } else {
-            logger.debug("hook", script, "exited with code", code);
-        }
-        deferred.resolve(code);
+    var script = hook_dir+service+".sh";
+    logger.debug('running service hook', script, 'with target', host);
+    // check hook exists, warn if not
+    fileStat(script).then(function (stat) {
+        var proc = child_process.spawn("/bin/sh", [script, host]);
+        // start script and resolve once it exits
+        proc.on('exit', function (code, signal) {
+            if (code > 0) {
+                logger.warn("hook", script, "exited with code", code);
+            } else {
+                logger.debug("hook", script, "exited with code", code);
+            }
+            deferred.resolve(code);
+        });
+    }, function (err) {
+        logger.warn("could not run service hook for", service, err);
+        deferred.resolve(100);
     });
     return deferred.promise();
 }
 
 var runServiceHooks = function () {
     var deferred = promise();
-    var hook_dir = "/etc/vcc/service-hooks.d/";
-    // define a function to execute each hook
-    var run_hook = function (service, host) {
-        // check if we have hook for this service
-        var script = hook_dir+service+".sh";
-        logger.debug("looking for service hook for", service);
-        fs.stat(script, function(err, stat) {
-            if(err == null) {
-                // run the hook
-                logger.debug('running service hook for', service, 'with target', host);
-                var proc = child_process.spawn("/bin/sh", [script, host]);
-                proc.on('exit', function (code, signal) {
-                    if (code > 0) {
-                        logger.warn("hook", script, "exited with code", code);
-                    } else {
-                        logger.debug("hook", script, "exited with code", code);
-                    }
-                    // when the hook is complete, set to true and the watcher will wait for all
-                    depends_hooks[service] = true;
-                });
-            } else if(err.code == 'ENOENT') {
-                // no hook installed but thats okay
-                depends_hooks[service] = true;
-                logger.warn('no service hook installed for', service);
-            } else {
-                // something went wrong, should we continue?
-                depends_hooks[service] = true;
-                logger.error('unhandled error hook stat', service);
-            }
-        });
-    }
-    // define a function to wait for all hooks to finish execution
-    var check_hooks = function () {
-        var ready = true;
-        for (var service in depends_hooks) {
-            if (depends_hooks[service] == false) {
-                ready = false
-            }
-        }
-        if (ready) {
-            logger.debug("service hooks are finished");
-            deferred.resolve();
+    logger.debug("running service hooks", depends);
+    promise.map(depends, function (depend) {
+        return runHook(depend[0], depend[1]);
+    })(function (result) {
+        // reduce the codes
+        var sum = result.reduce(function (r, i) {
+            return r+i;
+        }, 0);
+        if (sum > 0) {
+            logger.warn("some hooks did not run successfully");
         } else {
-            logger.debug("service hooks are not finished");
+            logger.debug("all hooks finished", result);
         }
-    }
-    // register watch for hooks finished
-    watcher.watch(depends_hooks, check_hooks);
-    // for each depends, run the hook
-    for (var service in depends) {
-        run_hook(service, depends[service]);
-    }
+        deferred.resolve(sum);
+    });
     return deferred.promise();
 }
 
