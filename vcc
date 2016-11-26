@@ -76,3 +76,8 @@ if test "$1" = 'shell'; then
 	fi
 	exit 0
 fi
+
+if test "$1" = 'krm'; then
+	docker kill $2
+	docker rm $2
+fi
