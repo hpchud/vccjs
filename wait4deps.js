@@ -12,6 +12,10 @@ var vccutil = require("./vccutil.js");
 var logger = require("./log.js");
 var kvstore = require("./kvstore.js");
 
+// convert async network functions to promises
+var fileStat = promise.promisify(fs.stat);
+
+
 var config = vccutil.getConfig();
 var depends = {};
 var depends_hooks = {};
@@ -65,10 +69,10 @@ var getServiceFromKV = function (service) {
     // the key we want
     var key = "/cluster/"+config.cluster+"/services/"+service;
     kv.get(key).then(function (value) {
-        // update the cache here too
         deferred.resolve([service, value]);
     }, function (err) {
-        deferred.resolve(false);
+        logger.debug(err);
+        deferred.resolve([service, false]);
     });
     return deferred.promise();
 }
@@ -113,6 +117,21 @@ var waitForDependencies = function () {
     };
     // poll for status changes
     setTimeout(check_depends, poll_ms);
+    return deferred.promise();
+}
+
+var runHook = function (script) {
+    var deferred = promise();
+    var proc = child_process.spawn("/bin/sh", [script]);
+    // start script and resolve once it exits
+    proc.on('exit', function (code, signal) {
+        if (code > 0) {
+            logger.warn("hook", script, "exited with code", code);
+        } else {
+            logger.debug("hook", script, "exited with code", code);
+        }
+        deferred.resolve(code);
+    });
     return deferred.promise();
 }
 
