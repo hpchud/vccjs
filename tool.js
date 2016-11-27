@@ -18,6 +18,8 @@ opt = require('node-getopt').create([
   ['', 'bind=PATH', 'bind mount folder from host into container'],
   ['', 'restart', 'set the Docker option to automatically restart container'],
   ['', 'justdoit', 'set options privileged, hostnet, name, bind=/home, restart'],
+  ['', 'swarm', 'specify the standalone Docker Swarm to use for provisioning'],
+  ['', 'swarm-node-exclusive', 'only provision one container per node for this cluster in the swarm'],
   //['', 'eval', 'format output suitable to eval in the host shell'],
   ['', 'just-yml', 'just dump the generated cluster init.yml and nothing else'],
   ['i', 'info', 'display information about this vcc image'],
@@ -129,12 +131,19 @@ if ((options.version || options.info || options.start)) {
         }
         var b64inityml = new Buffer(yaml.stringify(inityml)).toString('base64');
         // generate command for starting this image
-        var runcommand = "docker run -d ";
+        if (options.swarm) {
+            var runcommand = "docker -H "+options.swarm+" run -d ";
+        } else {
+            var runcommand = "docker run -d ";
+        }
         if (options.privileged) {
             runcommand += "--privileged ";
         }
         if (options.hostnet) {
             runcommand += "--net=host ";
+        }
+        if (options['swarm-node-exclusive']) {
+            runcommand += '--label="vcc'+options.cluster'" -e "affinity:container!=*vcc'+options.cluster'*" ';
         }
         if (options.name) {
             runcommand += "--name=vcc-"+options.cluster+"-"+options.service+" ";
