@@ -57,8 +57,11 @@ var getAddress = function () {
             deferred.resolve(active_interface.ip_address);
         }, function (err) {
             logger.warn("could not determine active interface");
-            logger.warn("using first available interface", interfaces_list[0].name);
-            deferred.resolve(interfaces_list[0].ip_address);
+            // make sure we pick only from interfaces with ips, sorted alphabetically
+            // since en* will come before any l* or v* interfaces
+            var firstint = Object.keys(name_to_ip).sort()[0];
+            logger.warn("using first available interface", firstint);
+            deferred.resolve(name_to_ip[firstint].ip_address);
         });
     });
 
