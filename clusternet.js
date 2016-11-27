@@ -17,20 +17,34 @@ logger.debug("current config is", config);
 // if an address is already set, we see if an interface is available with that address
 // if not, we override the manually set address with our discovered one
 
+var filterInterface = function (i) {
+    if (i.name.startsWith("docker")) {
+        return true;
+    } else if (i.name.startsWith("dummy")) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
 var getAddress = function () {
     var deferred = promise();
 
     getInterfacesList().then(function (interfaces_list) {
         // convert interfaces list into something we can work with
         var name_to_ip = interfaces_list.reduce(function (r, i) {
-            if (i.ip_address) {
-                r[i.name] = i.ip_address;
+            if (!filterInterface(i)) {
+                if (i.ip_address) {
+                    r[i.name] = i.ip_address;
+                }
             }
             return r;
         }, {});
         var ip_to_name = interfaces_list.reduce(function (r, i) {
-            if (i.ip_address) {
-                r[i.ip_address] = i.name;
+            if (!filterInterface(i)) {
+                if (i.ip_address) {
+                    r[i.name] = i.ip_address;
+                }
             }
             return r;
         }, {});
@@ -61,7 +75,7 @@ var getAddress = function () {
             // since en* will come before any l* or v* interfaces
             var firstint = Object.keys(name_to_ip).sort()[0];
             logger.warn("using first available interface", firstint);
-            deferred.resolve(name_to_ip[firstint].ip_address);
+            deferred.resolve(name_to_ip[firstint]);
         });
     });
 
