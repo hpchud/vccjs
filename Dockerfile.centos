@@ -36,7 +36,7 @@ RUN git clone https://github.com/tj/n.git \
 	&& rm -r n
 
 # use n to install node 0.10 
-RUN n 0.10
+RUN n 6.4.0
 
 # install init8js
 WORKDIR /
