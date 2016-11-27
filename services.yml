@@ -23,6 +23,7 @@ loadtargets:
     type: module
     module: "/vccjs/loadtargets.js"
     class: LoadTargets
+    requires: clusterdns
 
 wait4deps:
     type: shell
