@@ -63,13 +63,35 @@ var getFromCache = function (qname) {
     return deferred.promise();
 }
 
-var getFromKV = function (key) {
+var getFromKV = function (type, qname) {
     // the purpose of this promise is to handle a rejection from the kv store promise
     // because any error occured will reject the 'some' lookup promise
+    // it should also resolve the service name to host if applicable
     var deferred = promise();
+    if (type == "host") {
+        var key = "/cluster/"+config.cluster+"/hosts/"+qname;
+    } else if (type == "service") {
+        var key = "/cluster/"+config.cluster+"/services/"+qname;
+    }
+    // do the get from kv store
     kv.get(key).then(function (value) {
-        // update the cache here too
-        deferred.resolve(value);
+        // if this lookup was for type host, we are done
+        if (type == "host") {
+            // update the cache here too
+            deferred.resolve(value);
+        } else if (type == "service") {
+            // we need to do another getFromKV of type host
+            // because value is the name of the host providing this service!
+            getFromKV("host", value).then(function (hostanswer) {
+                // we are done
+                // update the cache here too
+                deferred.resolve(hostanswer);
+            }, function (err) {
+                logger.warn("got an error with nested getFromKV for service", qname);
+                logger.warn(err);
+                deferred.resolve(false);
+            });
+        }
     }, function (err) {
         deferred.resolve(false);
     });
@@ -94,8 +116,8 @@ var handleQuery = function (req, res) {
     // if the kvstore responds faster than our cache, so be it
     promise.some([
         getFromCache(qname.replace("vnode_", "")),
-        getFromKV("/cluster/"+config.cluster+"/hosts/"+qname.replace("vnode_", "")),
-        getFromKV("/cluster/"+config.cluster+"/services/"+qname)
+        getFromKV("host", qname.replace("vnode_", "")),
+        getFromKV("service", qname)
     ], function (raddress) {
         if (raddress) {
             logger.debug("a promise resolved this address to", raddress);
