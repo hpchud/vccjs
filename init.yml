@@ -8,7 +8,11 @@ default_path: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 cluster:
     kvstore:
         type: "etcd"
-        host: "10.71.88.133"
+        host: "localhost"
         port: "4001"
     cluster: "test"
-    service: headnode
+    service: workernode
+    image_info:
+        name: vcc base image
+        author: joshua.higgins@hud.ac.uk
+        version: 0.1
