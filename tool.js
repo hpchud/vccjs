@@ -143,7 +143,7 @@ if ((options.version || options.info || options.start)) {
             runcommand += "--net=host ";
         }
         if (options['swarm-node-exclusive']) {
-            runcommand += '--label="vcc'+options.cluster'" -e "affinity:container!=*vcc'+options.cluster'*" ';
+            runcommand += '--label="vcc'+options.cluster+'" -e "affinity:container!=*vcc'+options.cluster+'*" ';
         }
         if (options.name) {
             runcommand += "--name=vcc-"+options.cluster+"-"+options.service+" ";
