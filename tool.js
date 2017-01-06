@@ -12,6 +12,7 @@ opt = require('node-getopt').create([
   ['', 'service=SERVICE', 'for a multi service image, specify the service to start'],
   ['', 'force-address=IP', 'manually set the advertised IP of this instance'],
   ['', 'no-dns', 'don\'t use the ClusterDNS service'],
+  ['', 'usermode', 'always run services as the calling user'],
   //['', 'eval', 'format output suitable to eval in the host shell'],
   ['', 'just-yml', 'just dump the generated cluster init.yml and nothing else'],
   ['i', 'info', 'display information about this vcc image'],
@@ -118,6 +119,10 @@ if ((options.version || options.info)) {
     var b64inityml = new Buffer(yaml.stringify(inityml)).toString('base64');
     // generate command for starting this image
     var runcommand = "/init8js/init.js ";
+    // add usermode option if required
+    if (options.usermode) {
+        runcommand += "usermode ";
+    }
     runcommand += "b64inityml="+b64inityml;
     // output the commands in the desired format
     if (options['just-yml']) {
