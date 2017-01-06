@@ -79,6 +79,7 @@ if ((options.version || options.info)) {
         info.Services['Dependencies'] = deps;
         // print out in yaml
         console.log(yaml.stringify(info, 8));
+        process.exit(1);
     }
 } else {
     // check cluster name is specified
