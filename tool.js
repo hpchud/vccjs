@@ -17,14 +17,16 @@ opt = require('node-getopt').create([
   ['i', 'info', 'display information about this vcc image'],
   ['h', 'help', 'display this help'],
   ['v', 'version', 'show version']
-])              // create Getopt instance
-.bindHelp()     // bind option 'help' to default action
-.parseSystem(); // parse command line
+]); // parse command line
 
 
-var options = opt.options;
+var options = opt.parseSystem().options;
 
-//console.log(options);
+
+if (options.help) {
+    opt.showHelp();
+    process.exit(1);
+}
 
 if ((options.version || options.info)) {
     // version command
@@ -48,7 +50,7 @@ if ((options.version || options.info)) {
         console.log("▒▓▒▓▓▓▓▓▓▓▓▓▓");
         console.log("▒▓▒▒▒▒▒▒▒▓");
         console.log("▒▒▓▒▒▒▒▒▓ ");
-        process.exit(0);
+        process.exit(1);
     }
     // info command
     if (options.info) {
@@ -115,12 +117,14 @@ if ((options.version || options.info)) {
     // convert to yaml and then base64 encode
     var b64inityml = new Buffer(yaml.stringify(inityml)).toString('base64');
     // generate command for starting this image
-    var runcommand = "/vccjs/launch.sh ";
+    var runcommand = "/init8js/init.js ";
     runcommand += "b64inityml="+b64inityml;
     // output the commands in the desired format
     if (options['just-yml']) {
         console.log(yaml.stringify(inityml));
+        process.exit(1);
     } else {
         console.log(runcommand);
+        process.exit(0);
     }
 }

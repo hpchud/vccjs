@@ -1,9 +1,12 @@
 #!/bin/sh
 
-# the vcc daemon/tool launcher script
-
-if test "$1" = 'tool'; then
-	/vccjs/tool.js $@
+# run the tool
+tooloutput=$(/vccjs/tool.js $@)
+if [ "$?" = "0" ]; then
+	# if return code is 0, run the init8js daemon to start
+	exec $tooloutput
 else
-	/init8js/init.js $@
+	# otherwise, tool just printed informational messages
+	echo "$tooloutput"
+	exit 1
 fi
