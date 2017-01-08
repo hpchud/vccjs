@@ -1,14 +1,5 @@
 ---
 
-sshd-priv:
-    type: shell
-    exec: "mkdir /var/run/sshd && sshd-keygen || true"
-
-sshd:
-    type: daemon
-    exec: /usr/sbin/sshd -D
-    requires: clusterstart, sshd-priv
-
 clusternet:
     type: shell
     exec: "/usr/bin/env node /vccjs/clusternet.js"
