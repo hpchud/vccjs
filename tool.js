@@ -74,7 +74,11 @@ if (options.info) {
     };
     
     // check for service providers and dependencies
-    var deps = yaml.load("/etc/vcc/dependencies.yml");
+    try {
+        var deps = yaml.load("/etc/vcc/dependencies.yml");
+    } catch (err) {
+        var deps = {};
+    }
     info.Services['Dependencies'] = deps;
     // print out in yaml
     console.log(yaml.stringify(info, 8));

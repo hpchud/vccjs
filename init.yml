@@ -11,7 +11,7 @@ cluster:
         host: "localhost"
         port: "4001"
     cluster: "test"
-    service: workernode
+    service: null
     image_info:
         name: vcc base image
         author: joshua.higgins@hud.ac.uk
