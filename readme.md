@@ -1,24 +1,28 @@
-vcc
+# vccjs
 
+This repository holds the main Javascript implementation of the *Virtual Container Cluster*. 
 
+## Overview
 
+The VCC is a framework for creating Docker containers that encapsulate parallel cluster applications - in which multiple linked processes are executed on different hosts - such as in MPI.
 
-1. load in our configuration
-	- this tell us where to find the key value store
+The interactions between each component required to support the parallel application are modeled through a set of dependency linked *services* and related *hooks* that must be run when the providers of a service, or the number of hosts running the application, are changed.
 
-2. connect to the key value store
+See the `vcc-torque` and the `vcc-hadoop` repositories for the sample applications.
 
-3. wait for dependent services to be registered in kv store (value is hostname of that service)
+The paper describing the architecture and benchmarking of the system is published in *The Computer Journal*. The author's self-archived copy is contained within this repository.
 
-4. start cluster dns service (may be required in hooks)
+## Building
 
-5. run service hooks for the services we depend on
+This repository is used to build the base image that contains the VCC tool, daemons and the service manager entrypoint. Two Dockerfiles are provided to build this image based on CentOS or Ubuntu, but it should be really easy to create one for your preferred distro based on these.
 
-6. run the system targets (replacing init system)
+```
+docker build -f Dockerfile.centos -t vcccentos .
+```
+```
+docker build -f Dockerfile.ubuntu -t vccubuntu .
+```
 
-7. add ourselves to the cluster hosts in the kv store
+## Contributing
 
-8. start watching for changes in cluster hosts
-	- on change detected, run cluster hooks
-
-9. advertise that any services we provide are ready, when we reach ready target
+We would love to recieve pull requests and bug reports.
