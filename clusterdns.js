@@ -134,12 +134,18 @@ var handleQuery = function (req, res) {
     });
 };
 
+var handleError = function (err) {
+    logger.error("ClusterDNS could not bind to port 53")
+    logger.error(err);
+}
+
 if (!config.nodns) {
     // start the dns server
     var server = ndns.createServer('udp4');
     server.on("request", handleQuery);
+    server.on("error", handleError);
+    logger.info("ClusterDNS is binding to port 53");
     server.bind(53, "127.0.0.1");
-    logger.info("ClusterDNS is listening on port 53");
     // prepend ourself to /etc/resolv.conf
     prependResolv().then(function () {
         logger.info("appended 127.0.0.1 to /etc/resolv.conf");
