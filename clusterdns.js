@@ -144,14 +144,20 @@ if (!config.nodns) {
     var server = ndns.createServer('udp4');
     server.on("request", handleQuery);
     server.on("error", handleError);
-    logger.info("ClusterDNS is binding to port 53");
-    server.bind(53, "127.0.0.1");
-    // prepend ourself to /etc/resolv.conf
-    prependResolv().then(function () {
-        logger.info("appended 127.0.0.1 to /etc/resolv.conf");
-    }, function (err) {
-        logger.error("could not prepend /etc/resolv.conf", err);
-    });
+    // work out what port we should use
+    if (process.getuid && process.getuid() === 0) {
+        var port = 53;
+        // prepend ourself to /etc/resolv.conf
+        prependResolv().then(function () {
+            logger.info("appended 127.0.0.1 to /etc/resolv.conf");
+        }, function (err) {
+            logger.error("could not prepend /etc/resolv.conf", err);
+        });
+    } else {
+        var port = 32353;
+    }
+    logger.info("ClusterDNS is binding to port", port);
+    server.bind(port, "127.0.0.1");
 } else {
     logger.warn("Not using ClusterDNS service, make sure an alternative for name resolution is available.");
 }
