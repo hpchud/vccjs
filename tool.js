@@ -112,7 +112,7 @@ if(options['force-address']) {
     inityml.cluster.myaddress = options['force-address'];
 }
 // cluster dns
-if(options['no-dns']) {
+if(options['no-dns'] || options.usermode) {
     inityml.cluster.nodns = true;
 }
 // set cluster name and service
