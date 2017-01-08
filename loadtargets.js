@@ -14,7 +14,7 @@ var logger = require("./log.js");
 module.exports = {
     LoadTargets: function (service, config, targets, f_register_services) {
 	    var deferred = promise();
-	    var config = vccutil.getConfig();
+	    var config = vccutil.getConfig(false, service.result_env['INIT_RUN_DIR']);
 	    var servicefile = "/etc/vcc/services-"+config.service+".yml";
 	    // make sure service targets definition file exists
 	    fs.stat(servicefile, function(err, stat) {

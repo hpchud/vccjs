@@ -14,8 +14,10 @@ exports.getRunDir = function () {
 	return run_dir;
 }
 
-exports.getConfig = function (full) {
-	var run_dir = exports.getRunDir();
+exports.getConfig = function (full, run_dir) {
+	if (!run_dir) {
+		var run_dir = exports.getRunDir();
+	}
 	var config = yaml.load(path.join(run_dir, 'init.yml'));
 	if (full) {
 		return config;
