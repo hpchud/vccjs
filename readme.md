@@ -16,9 +16,18 @@ The paper describing the architecture and benchmarking of the system is publishe
 
 This repository is used to build the base image that contains the VCC tool, daemons and the service manager entrypoint. Two Dockerfiles are provided to build this image based on CentOS or Ubuntu, but it should be really easy to create one for your preferred distro based on these.
 
+First you must pull in the dependencies using the Node Package Manager.
+
+```
+npm install
+```
+
+Then you can go ahead and build the Docker image
+
 ```
 docker build -f Dockerfile.centos -t vcccentos .
 ```
+or
 ```
 docker build -f Dockerfile.ubuntu -t vccubuntu .
 ```
