@@ -14,25 +14,15 @@ The paper describing the architecture and benchmarking of the system is publishe
 
 ## Building
 
-This repository is used to build the base image that contains the VCC tool, daemons and the service manager entrypoint.
+This repository contains the VCC tool, daemons and the service manager entrypoint. 
 
-The master branch builds an image based on CentOS. It should be really easy to create one for your preferred distro based on these.
-
-First you must pull in the dependencies using the Node Package Manager.
+For development, just pull in the dependencies using the Node Package Manager.
 
 ```
 npm install
 ```
 
-Then you can go ahead and build the Docker image
-
-```
-docker build -f Dockerfile.centos -t hpchud/vcccentos:7 .
-```
-or
-```
-docker build -f Dockerfile.ubuntu -t hpchud/vccubuntu:xenial .
-```
+The `vcc-base-centos` repository contains a Dockerfile for building a Docker image including the VCC framework based on CentOS.
 
 ## Contributing
 
