@@ -14,7 +14,9 @@ The paper describing the architecture and benchmarking of the system is publishe
 
 ## Building
 
-This repository is used to build the base image that contains the VCC tool, daemons and the service manager entrypoint. Two Dockerfiles are provided to build this image based on CentOS 7 or Ubuntu 16.04 LTS, but it should be really easy to create one for your preferred distro based on these.
+This repository is used to build the base image that contains the VCC tool, daemons and the service manager entrypoint.
+
+The master branch builds an image based on CentOS. It should be really easy to create one for your preferred distro based on these.
 
 First you must pull in the dependencies using the Node Package Manager.
 
