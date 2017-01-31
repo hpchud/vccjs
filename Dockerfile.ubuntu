@@ -1,7 +1,7 @@
 FROM ubuntu:xenial
 
-ARG http_proxy=http://wwwproxy.hud.ac.uk:3128
-ARG https_proxy=http://wwwproxy.hud.ac.uk:3128
+# ARG http_proxy=http://wwwproxy.hud.ac.uk:3128
+# ARG https_proxy=http://wwwproxy.hud.ac.uk:3128
 
 # install packages required
 RUN apt-get update \
