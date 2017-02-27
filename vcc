@@ -70,16 +70,24 @@ elif test "$1" = 'krm'; then
 	docker rm $2
 elif test "$1" = 'setuplab'; then
 	docker run -d --name=discovery hpchud/vcc-discovery
-	docker run -d --link discovery:discovery --name=headnode $VCCIMAGE \
+	docker run -d --link discovery:discovery \
+		--name=headnode \
+		-v /cluster:/cluster \
+		$VCCIMAGE \
 		--cluster=testlab \
 		--storage-host=discovery \
 		--storage-port=2379 \
 		--service=headnode
-	docker run -d --link discovery:discovery --name=workernode $VCCIMAGE \
+	docker run -d --link discovery:discovery \
+		--name=workernode \
+		-v /cluster:/cluster \
+		$VCCIMAGE \
 		--cluster=testlab \
 		--storage-host=discovery \
 		--storage-port=2379 \
 		--service=workernode
+	docker start headnode
+	docker start workernode
 else
 	docker run -d $DOCKER_ARGS $VCCIMAGE $@
 fi
