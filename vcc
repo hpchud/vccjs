@@ -3,7 +3,7 @@
 
 VCCIMAGE="hpchud/vcc-torque:latest"
 SCRIPTVERSION="master"
-SCRIPTURL="https://raw.githubusercontent.com/joshiggins/vccjs/$SCRIPTVERSION/vcc"
+SCRIPTURL="https://raw.githubusercontent.com/hpchud/vccjs/$SCRIPTVERSION/vcc"
 
 if test "$1" = 'update'; then
 	echo "Updating VCC tool..."
