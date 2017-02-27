@@ -72,6 +72,7 @@ elif test "$1" = 'setuplab'; then
 	docker run -d --link discovery:discovery \
 		--name=headnode \
 		-v /cluster:/cluster \
+		-p 2222:2222 \
 		$VCCIMAGE \
 		--cluster=testlab \
 		--storage-host=discovery \
