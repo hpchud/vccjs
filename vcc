@@ -11,9 +11,8 @@ if test "$1" = 'update'; then
 	wget -O /usr/bin/vcc-new $SCRIPTURL 2>&1 >/dev/null
 	if test "$?" = '0'; then
 		mv /usr/bin/vcc-new /usr/bin/vcc
+		chmod a+x /usr/bin/vcc
 		echo "The VCC tool has been updated."
-		echo "You must run 'vcc update' again to update the images."
-		exit 0
 	else
 			echo 'There was a problem updating the script. Check proxy settings.'
 			exit 1
