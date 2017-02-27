@@ -1,63 +1,34 @@
 #!/bin/sh
 # the vcc helper script
-# joshua higgins 2016
 
-VCCIMAGE="kxes/pca2016"
-SCRIPTURL="https://raw.githubusercontent.com/joshiggins/vccjs/master/vcc"
+VCCIMAGE="hpchud/vcc-torque:latest"
+SCRIPTVERSION="master"
+SCRIPTURL="https://raw.githubusercontent.com/joshiggins/vccjs/$SCRIPTVERSION/vcc"
 
 if test "$1" = 'update'; then
+	echo "Updating VCC tool..."
 	echo ""
-	echo ""
-	echo "*********"
-	echo 'checking for update to script'
-	echo "*********"
-	echo ""
-	echo ""
-	wget -O /usr/bin/vcc $SCRIPTURL
+	wget -O /usr/bin/vcc-new $SCRIPTURL 2>&1 >/dev/null
 	if test "$?" = '0'; then
-		echo "OK."
+		mv /usr/bin/vcc-new /usr/bin/vcc
+		echo "The VCC tool has been updated."
+		echo "You must run 'vcc update' again to update the images."
+		exit 0
 	else
-			echo ""
-			echo ""
-			echo "*********"
-			echo 'There was a problem updating. Check proxy settings.'
-			echo "*********"
-			echo ""
-			echo ""
+			echo 'There was a problem updating the script. Check proxy settings.'
 			exit 1
 	fi
-	echo ""
-	echo ""
-	echo "*********"
-	echo 'pulling docker images'
-	echo "*********"
-	echo ""
+	echo "Pulling Docker images"
 	echo ""
 	docker pull $VCCIMAGE
 	if test "$?" = '0'; then
-		echo "OK."
+		echo "Images downloaded/updated successfully."
 	else
-			echo ""
-			echo ""
-			echo "*********"
-			echo 'There was a problem updating. Check proxy settings.'
-			echo "*********"
-			echo ""
-			echo ""
-			exit 1
+		echo 'There was a problem downloading the images. Check proxy settings.'
+		exit 1
 	fi
 	exit 0
-fi
-
-if test "$1" = 'tool'; then
-	if test "$2" = '--start'; then
-		eval $(docker run --rm -it $VCCIMAGE $@)
-	else
-		docker run --rm -it $VCCIMAGE $@
-	fi
-fi
-
-if test "$1" = 'shell'; then
+elif test "$1" = 'shell'; then
 	nids="`docker ps | grep $VCCIMAGE | awk '{print $1}' | wc -l`"
 	if test "$nids" = '1'; then
 		id="`docker ps | grep $VCCIMAGE | awk '{print $1}'`"
@@ -70,14 +41,46 @@ if test "$1" = 'shell'; then
 		echo ""
 		echo ""
 		docker exec -it $id /bin/bash
+	elif test "$nids" = '0'; then
+		echo "There are no containers running."
+		echo "Maybe you need to run \`docker start <id>\`?"
+		echo ""
+		echo "(to set up the lab testing environment, run \`vcc setuplab\`)"
 	else
-		echo "error: there is more than 1 VCC container running on this host"
-		echo "use docker exec command to enter the container's shell"
+		echo "Please choose which container to enter:"
+		echo "(CTRL+C to cancel)"
+		echo ""
+		docker inspect --format='{{.Name}} {{.Id}}' $(docker ps -q --no-trunc) | tr '/' ' '
+		echo ""
+		echo -n "Name or Id : "
+		read id
+		echo ""
+		echo ""
+		echo "*********"
+		echo "You are now entering the VCC shell for $id"
+		echo "To exit, type \`exit\` or press CTRL+D"
+		echo "*********"
+		echo ""
+		echo ""
+		docker exec -it $id /bin/bash
 	fi
 	exit 0
-fi
-
-if test "$1" = 'krm'; then
+elif test "$1" = 'krm'; then
 	docker kill $2
 	docker rm $2
+elif test "$1" = 'setuplab'; then
+	docker run -d --name=discovery hpchud/vcc-discovery
+	docker run -d --link discovery:discovery --name=headnode $VCCIMAGE \
+		--cluster=testlab \
+		--storage-host=discovery \
+		--storage-port=2379 \
+		--service=headnode
+	docker run -d --link discovery:discovery --name=workernode $VCCIMAGE \
+		--cluster=testlab \
+		--storage-host=discovery \
+		--storage-port=2379 \
+		--service=workernode
+else
+	docker run -d $DOCKER_ARGS $VCCIMAGE $@
 fi
+
