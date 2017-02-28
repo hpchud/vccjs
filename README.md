@@ -126,3 +126,7 @@ npm install
 ```
 
 We would love to recieve pull requests and bug reports.
+
+# License
+
+The code in this repository is licensed under the MIT License. See the `LICENSE` file for the full text.
