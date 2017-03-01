@@ -67,7 +67,7 @@ docker run -d --name=workernode --link discovery:discovery \
     --service=workernode
 ```
 
-You can add as many workernodes as you like. If you expose the containers to the network, using `--net=host`, you may start the containers on different Docker hosts.
+You can add as many workernodes as you like. If you expose the containers to the network, using `--net=host`, you may start the containers on different Docker hosts (in this case, use the real IP addresses instead of Docker `--link`s).
 
 Now you can log in to the headnode and see that the cluster is running
 
