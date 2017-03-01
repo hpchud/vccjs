@@ -79,6 +79,22 @@ docker exec -it headnode /bin/bash
 pbsnodes
 ```
 
+This should show output like the following
+
+```
+```
+
+To run the test job to confirm that the functionality is working as expected, switch to the `batchuser` account and submit the `hello.job` file to the resource manager.
+
+```
+# su batchuser
+$ cd /home/batchuser
+$ qsub hello.job
+$ qstat
+```
+
+This job will compile a short MPI test program and execute it. After a few moments, the expected output can be found in a file in the same directory.
+
 More information about this image can be found in the [hpchud/vcc-torque](https://github.com/hpchud/vcc-torque) repository.
 
 ## Using the `vcc` script
