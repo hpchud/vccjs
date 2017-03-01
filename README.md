@@ -8,6 +8,8 @@ It supports both *single node* and *multi node* execution, where a system of lin
 
 The orchestration of these processes is self-contained, offering a high degree of portability between container runtimes (Docker, Singularity, etc) and external orchestration middleware (PBS, Kubernetes, etc).
 
+This allows fast setup and teardown of complex virtual environments to support different kinds of cluster and parallel applications, regardless of the underlying infrastructure.
+
 The interactions between each component required to support the parallel application are modeled through a set of dependency linked services and related hooks that must be run when the providers of a service, or the number of hosts running the application, are changed.
 
 # How do I use it?
