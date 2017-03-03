@@ -8,6 +8,8 @@ It supports both *single node* and *multi node* execution, where a system of lin
 
 The orchestration of these processes is self-contained, offering a high degree of portability between container runtimes (Docker, Singularity, etc) and external orchestration middleware (PBS, Kubernetes, etc).
 
+This allows fast setup and teardown of complex virtual environments to support different kinds of cluster and parallel applications, regardless of the underlying infrastructure.
+
 The interactions between each component required to support the parallel application are modeled through a set of dependency linked services and related hooks that must be run when the providers of a service, or the number of hosts running the application, are changed.
 
 # How do I use it?
@@ -65,7 +67,7 @@ docker run -d --name=workernode --link discovery:discovery \
     --service=workernode
 ```
 
-You can add as many workernodes as you like. If you expose the containers to the network, using `--net=host`, you may start the containers on different Docker hosts.
+You can add as many workernodes as you like. If you expose the containers to the network, using `--net=host`, you may start the containers on different Docker hosts (in this case, use the real IP addresses instead of Docker `--link`s).
 
 Now you can log in to the headnode and see that the cluster is running
 
@@ -76,6 +78,22 @@ docker exec -it headnode /bin/bash
 ```
 pbsnodes
 ```
+
+This should show output like the following
+
+```
+```
+
+To run the test job to confirm that the functionality is working as expected, switch to the `batchuser` account and submit the `hello.job` file to the resource manager.
+
+```
+# su batchuser
+$ cd /home/batchuser
+$ qsub hello.job
+$ qstat
+```
+
+This job will compile a short MPI test program and execute it. After a few moments, the expected output can be found in a file in the same directory.
 
 More information about this image can be found in the [hpchud/vcc-torque](https://github.com/hpchud/vcc-torque) repository.
 
