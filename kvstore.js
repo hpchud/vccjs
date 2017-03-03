@@ -116,17 +116,24 @@ VccStore.prototype.list = function (key, with_vals) {
 }
 
 VccStore.prototype.register = function (key, value, ttl) {
-	// this is the only function that does not return a promise
-	// because there is no obvious resolution
+	var deferred = promise();
+	// this promise resolves after the first set is complete
 	if (!this.connected) {
-		throw "kvstore is not connected";
+		deferred.reject("kvstore is not connected");
 	}
 	logger.debug("key register:", key, value, ttl, "refresh in", (ttl*1000)-10000, "ms");
 	var me = this;
-	this.set(key, value, ttl);
-	setTimeout(function() {
-		me.register(key, value, ttl);
-	}, (ttl*1000)-10000);
+	this.set(key, value, ttl).then(function () {
+		// success, now register a timeout
+		setTimeout(function() {
+			me.register(key, value, ttl);
+		}, (ttl*1000)-10000);
+		// resolve the promise
+		deferred.resolve();
+	}, function (err) {
+		deferred.reject(err);
+	});
+	return deferred.promise();
 }
 
 module.exports = VccStore;
