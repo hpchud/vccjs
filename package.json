@@ -4,7 +4,7 @@
   "description": "",
   "main": "vcc.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "./node_modules/mocha/bin/mocha"
   },
   "author": "Joshua Higgins <joshiggins@gmail.com> (http://joshh.info/)",
   "license": "MIT",
