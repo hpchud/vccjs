@@ -19,5 +19,9 @@
     "watchjs": "0.0.0",
     "winston": "^2.2.0",
     "yamljs": "^0.2.8"
+  },
+  "devDependencies": {
+    "jsdoc": "^3.4.3",
+    "mocha": "^3.2.0"
   }
 }
