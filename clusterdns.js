@@ -31,10 +31,11 @@ var ClusterDNS = function (config) {
 
 /**
  * Dispatch a timeout to register our hostname in the discovery KV store every 60s
+ * @returns {Promise}
  */
 ClusterDNS.prototype.registerName = function () {
     var key = "/cluster/"+this.config.cluster+"/hosts/"+this.config.myhostname;
-    this.kv.register(key, this.config.myaddress, 60);
+    return this.kv.register(key, this.config.myaddress, 60);
 }
 
  /**
