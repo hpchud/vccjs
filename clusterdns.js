@@ -29,11 +29,18 @@ var ClusterDNS = function (config) {
     this.cache_ttl = 60;
 }
 
+/**
+ * Dispatch a timeout to register our hostname in the discovery KV store every 60s
+ */
 ClusterDNS.prototype.registerName = function () {
     var key = "/cluster/"+this.config.cluster+"/hosts/"+this.config.myhostname;
     this.kv.register(key, this.config.myaddress, 60);
 }
 
+ /**
+ * Prepend nameserver 127.0.0.1 to the /etc/resolv.conf file
+ * @returns {Promise}
+ */
 ClusterDNS.prototype.prependResolv = function () {
     var deferred = promise();
     // this function adds ourself to the top of /etc/resolv.conf
@@ -46,6 +53,12 @@ ClusterDNS.prototype.prependResolv = function () {
     return deferred.promise();
 }
 
+/**
+ * Complete a DNS query
+ * @param {String} raddress - The address we looked up
+ * @param {String} qname - The name from the question
+ * @param {Object} res - The response object
+ */
 ClusterDNS.prototype.completeQuery = function (raddress, qname, res) {
     // prepare response
     logger.info("ClusterDNS looked up to", raddress);
@@ -59,6 +72,11 @@ ClusterDNS.prototype.completeQuery = function (raddress, qname, res) {
     res.send();
 }
 
+/**
+ * Lookup a record from the local cache - Not implemented
+ * @param {String} qname - The name from the question
+ * @returns {Promise}
+ */
 ClusterDNS.prototype.getFromCache = function (qname) {
     var deferred = promise();
     // no cache for now
@@ -66,6 +84,12 @@ ClusterDNS.prototype.getFromCache = function (qname) {
     return deferred.promise();
 }
 
+/**
+ * Lookup a record from the discovery KV store
+ * @param {String} type - Either "host" or "service" indicating if the name to lookup is a hostname or service name
+ * @param {String} qname - The name from the question
+ * @returns {Promise}
+ */
 ClusterDNS.prototype.getFromKV = function (type, qname) {
     var me = this;
     // the purpose of this promise is to handle a rejection from the kv store promise
@@ -102,6 +126,11 @@ ClusterDNS.prototype.getFromKV = function (type, qname) {
     return deferred.promise();
 }
 
+/**
+ * Handle a query from the server
+ * @param {Object} req - The request object
+ * @param {Object} res - The response object
+ */
 ClusterDNS.prototype.handleQuery = function (req, res) {
     var me = this;
     var resolved = false;
@@ -139,11 +168,19 @@ ClusterDNS.prototype.handleQuery = function (req, res) {
     });
 };
 
+/**
+ * Handle an error binding the server
+ * @param {Object} err - The error object
+ */
 ClusterDNS.prototype.handleError = function (err) {
     logger.error("ClusterDNS could not bind to port 53")
     logger.error(err);
 }
 
+/**
+ * Start the server listening
+ * @param {Number} port - The port to listen on
+ */
 ClusterDNS.prototype.listen = function (port) {
     // start the dns server
     var server = ndns.createServer('udp4');
