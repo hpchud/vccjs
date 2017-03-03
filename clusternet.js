@@ -11,8 +11,7 @@ var logger = require("./log.js");
 var getInterfacesList = promise.promisify(network.get_interfaces_list);
 var getActiveInterface = promise.promisify(network.get_active_interface);
 
-var config = vccutil.getConfig();
-logger.debug("current config is", config);
+var config = null;
 
 // if an address is already set, we see if an interface is available with that address
 // if not, we override the manually set address with our discovered one
@@ -82,18 +81,28 @@ var getAddress = function () {
     return deferred.promise();
 }
 
-getAddress().then(function (address) {
-    logger.info("our IP address is", address);
-    logger.info("our hostname is", os.hostname());
-    // update the config file with our address and hostname
-    config.myaddress = address;
-    config.myhostname = os.hostname();
-    logger.debug("going to write config");
-    vccutil.writeConfig(config).then(function () {
-        logger.info("updated config");
-    },
-    function (err) {
-        logger.error("failed to write config");
-        logger.error(err);
-    });
-}).done();
+if (require.main === module) {
+
+    config = vccutil.getConfig();
+    logger.debug("current config is", config);
+
+    getAddress().then(function (address) {
+        logger.info("our IP address is", address);
+        logger.info("our hostname is", os.hostname());
+        // update the config file with our address and hostname
+        config.myaddress = address;
+        config.myhostname = os.hostname();
+        logger.debug("going to write config");
+        vccutil.writeConfig(config).then(function () {
+            logger.info("updated config");
+        },
+        function (err) {
+            logger.error("failed to write config");
+            logger.error(err);
+        });
+    }).done();
+} else {
+    exports.config = config;
+    exports.filterInterface = filterInterface;
+    exports.getAddress = getAddress;
+}
