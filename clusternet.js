@@ -25,6 +25,9 @@ var ClusterNet = function (config) {
     this.ip_to_name = null;
 };
 
+/**
+ * Get a list of network interfaces, and the active interface if available.
+ */
 ClusterNet.prototype.getInterfaces = function () {
     var deferred = promise();
     var me = this;
@@ -44,6 +47,11 @@ ClusterNet.prototype.getInterfaces = function () {
     return deferred.promise();
 }
 
+/**
+ * See if we should filter an interface or not
+ * @param {Object} interface - An interface object
+ * @returns {Boolean}
+ */
 ClusterNet.prototype.filterInterface = function (i) {
     if (i.name.startsWith("docker")) {
         return true;
@@ -54,6 +62,10 @@ ClusterNet.prototype.filterInterface = function (i) {
     }
 }
 
+/**
+ * Parse the list of interfaces
+ * @returns {Array} [names to ips, ips to names]
+ */
 ClusterNet.prototype.parseInterfacesList = function () {
     var me = this;
     // convert interfaces list into something we can work with
@@ -78,6 +90,10 @@ ClusterNet.prototype.parseInterfacesList = function () {
     return [name_to_ip, ip_to_name];
 }
 
+/**
+ * See if we have a saved IP address
+ * @returns {String|Boolean} the IP address, or false if not
+ */
 ClusterNet.prototype.hasSavedAddress = function () {
     // if an address is already set, we see if an interface is available with that address
     // if not, we override the manually set address with our discovered one
@@ -96,6 +112,10 @@ ClusterNet.prototype.hasSavedAddress = function () {
     }
 }
 
+/**
+ * See if we have an IP address on a Weave interface
+ * @returns {String|Boolean} the IP address, or false if not
+ */
 ClusterNet.prototype.hasWeaveInterface = function () {
     // see if there is a weave interface
     if('ethwe' in this.name_to_ip) {
@@ -107,6 +127,10 @@ ClusterNet.prototype.hasWeaveInterface = function () {
     }
 }
 
+/**
+ * See if there is an active network interface on the system
+ * @returns {String|Boolean} the IP address, or false if not
+ */
 ClusterNet.prototype.hasActiveInterface = function () {
     // detect the active interface
     if (this.active_interface) {
@@ -118,6 +142,10 @@ ClusterNet.prototype.hasActiveInterface = function () {
     }
 }
 
+/**
+ * See if there is any network interface on the system
+ * @returns {String|Boolean} the IP address, or false if not
+ */
 ClusterNet.prototype.hasAvailableInterface = function () {
     // return first available interface
     if (Object.keys(this.name_to_ip).length > 0) {
@@ -130,6 +158,10 @@ ClusterNet.prototype.hasAvailableInterface = function () {
     }
 }
 
+/**
+ * Call each has* function in the best order to determine IP address
+ * @returns {String|Boolean} the IP address, or false if not
+ */
 ClusterNet.prototype.getAddress = function () {
     // try our options
     var ip = this.hasSavedAddress();
@@ -152,6 +184,11 @@ ClusterNet.prototype.getAddress = function () {
     return false;
 }
 
+/**
+ * Write a new version of the system config file (loaded by subsequent modules)
+ * @param {String} address - The determined IP address
+ * @returns {Promise}
+ */
 ClusterNet.prototype.writeConfig = function (address) {
     var deferred = promise();
     logger.info("our IP address is", address);
@@ -172,6 +209,9 @@ ClusterNet.prototype.writeConfig = function (address) {
     return deferred.promise();
 };
 
+/**
+ * The main function to call if we are loaded as a daemon
+ */
 ClusterNet.prototype.main = function () {
     var me = this;
     // get the interfaces
