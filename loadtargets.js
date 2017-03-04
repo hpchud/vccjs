@@ -19,18 +19,21 @@ module.exports = {
 	    var servicefile = path.join(module.exports.servicePath, "services-"+config.service+".yml");
 	    // make sure service targets definition file exists
 	    fs.stat(servicefile, function(err, stat) {
-	        if(err == null) {
-	            // parse the yaml file and register the targets
+	        if(err) {
+	        	if(err.code == 'ENOENT') {
+		            // no service file
+		            logger.error('There is no service definition for '+config.service);
+		            logger.error('Please create '+servicefile);
+		        } else {
+		            // something went wrong
+		            logger.error('unhandled error hook stat', servicefile);
+		        }
+		        deferred.reject(err);
+	        } else {
+	        	// parse the yaml file and register the targets
 	            logger.debug("Registering service provider targets for "+config.service);
 	            f_register_services(yaml.load(servicefile));
 	            deferred.resolve();
-	        } else if(err.code == 'ENOENT') {
-	            // no service file
-	            logger.error('There is no service definition for '+config.service);
-	            logger.error('Please create '+servicefile);
-	        } else {
-	            // something went wrong
-	            logger.error('unhandled error hook stat', servicefile);
 	        }
 	    });
 	    return deferred.promise();
