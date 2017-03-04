@@ -7,6 +7,7 @@ var promise = require("deferred");
 var yaml = require("yamljs");
 var watcher = require("watchjs");
 var child_process = require('child_process');
+var path = require('path');
 
 var vccutil = require("./vccutil.js");
 var logger = require("./log.js");
@@ -16,59 +17,63 @@ var kvstore = require("./kvstore.js");
 var fileStat = promise.promisify(fs.stat);
 
 
-var config = vccutil.getConfig();
-var depends = [];
-var hook_dir = "/etc/vcc/service-hooks.d/";
+var Wait4Deps = function (config) {
+    this.config = config;
+    this.config.depends = null;
+    this.config.providers = null;
+    this.kv = new kvstore();
+    this.kv.connect(config.kvstore.host, config.kvstore.port);
+    this.depends = null;
+    this.hook_dir = "/etc/vcc/service-hooks.d/";
+    this.depfile = "/etc/vcc/dependencies.yml";
+}
 
-
-// open the kvstore
-kv = new kvstore();
-kv.connect(config.kvstore.host, config.kvstore.port);
-
-
-var readDependencies = function () {
+Wait4Deps.prototype.readDependencies = function () {
     var deferred = promise();
-    var depfile = "/etc/vcc/dependencies.yml";
-    logger.debug('reading dependency file', depfile);
-    fs.stat(depfile, function(err, stat) {
+    var me = this;
+    logger.debug('reading dependency file', this.depfile);
+    fs.stat(this.depfile, function(err, stat) {
         if(err == null) {
             // parse the yaml file and put into expected places
-            var deps = yaml.load(depfile);
-            if (deps[config.service]) {
+            var deps = yaml.load(me.depfile);
+            if (deps[me.config.service]) {
                 // copy dependencies if specified
-                if (deps[config.service].depends) {
-                    config.depends = JSON.parse(JSON.stringify(deps[config.service].depends));
+                if (deps[me.config.service].depends) {
+                    me.config.depends = JSON.parse(JSON.stringify(deps[me.config.service].depends));
                 } else {
                     logger.warn('No service dependencies specified');
                 }
                 // copy providers if specified
-                if (deps[config.service].providers) {
-                    config.providers = JSON.parse(JSON.stringify(deps[config.service].providers));
+                if (deps[me.config.service].providers) {
+                    me.config.providers = JSON.parse(JSON.stringify(deps[me.config.service].providers));
                 } else {
                     logger.warn('No service provider targets specified');
                 }
                 // return
                 deferred.resolve();
             } else {
-                logger.error('Dependency file does not define our service', config.service);
+                logger.error('Dependency file does not define our service', me.config.service);
+                deferred.reject('Dependency file does not define our service');
             }
         } else if(err.code == 'ENOENT') {
             // no service file
             logger.error('There is no service dependency file');
-            logger.error('Please create '+depfile);
+            logger.error('Please create '+me.depfile);
+            deferred.reject(err);
         } else {
             // something went wrong
-            logger.error('unhandled error hook stat', depfile);
+            logger.error('unhandled error hook stat', me.depfile);
+            deferred.reject(err);
         }
     });
     return deferred.promise();
 }
 
-var getServiceFromKV = function (service) {
+Wait4Deps.prototype.getServiceFromKV = function (service) {
     var deferred = promise();
     // the key we want
-    var key = "/cluster/"+config.cluster+"/services/"+service;
-    kv.get(key).then(function (value) {
+    var key = "/cluster/"+this.config.cluster+"/services/"+service;
+    this.kv.get(key).then(function (value) {
         deferred.resolve([service, value]);
     }, function (err) {
         logger.debug(err);
@@ -77,14 +82,15 @@ var getServiceFromKV = function (service) {
     return deferred.promise();
 }
 
-var waitForDependencies = function () {
+Wait4Deps.prototype.waitForDependencies = function () {
+    var me = this;
     var deferred = promise();
     var poll_ms = 2000;
-    logger.debug("waiting for cluster service dependencies", config.depends);
+    logger.debug("waiting for cluster service dependencies", this.config.depends);
     // define function to check the depends object
     var check_depends = function () {
-        promise.map(config.depends, function (depend) {
-            return getServiceFromKV(depend);
+        promise.map(me.config.depends, function (depend) {
+            return me.getServiceFromKV(depend);
         })(function (result) {
             // the result is a list like:
             // [ [ 'dep1', 'false' ], [ 'dep2', 'headnode' ] ]
@@ -104,8 +110,8 @@ var waitForDependencies = function () {
                 }
             }
             if (ready) {
-                depends = result;
-                deferred.resolve()
+                me.depends = result;
+                deferred.resolve();
             } else {
                 setTimeout(check_depends, poll_ms);
             }
@@ -116,9 +122,9 @@ var waitForDependencies = function () {
     return deferred.promise();
 }
 
-var runHook = function (service, host) {
+Wait4Deps.prototype.runHook = function (service, host) {
     var deferred = promise();
-    var script = hook_dir+service+".sh";
+    var script = path.join(this.hook_dir, service + ".sh");
     logger.debug('running service hook', script, 'with target', host);
     // check hook exists, warn if not
     fileStat(script).then(function (stat) {
@@ -139,45 +145,59 @@ var runHook = function (service, host) {
     return deferred.promise();
 }
 
-var runServiceHooks = function () {
+Wait4Deps.prototype.runServiceHooks = function () {
+    var me = this;
     var deferred = promise();
-    logger.debug("running service hooks", depends);
-    promise.map(depends, function (depend) {
-        return runHook(depend[0], depend[1]);
-    })(function (result) {
-        // reduce the codes
-        var sum = result.reduce(function (r, i) {
-            return r+i;
-        }, 0);
-        if (sum > 0) {
-            logger.warn("some hooks did not run successfully");
-        } else {
-            logger.debug("all hooks finished", result);
-        }
-        deferred.resolve(sum);
-    });
+    logger.debug("running service hooks", this.depends);
+    if(this.depends) {
+        promise.map(this.depends, function (depend) {
+            return me.runHook(depend[0], depend[1]);
+        })(function (result) {
+            // reduce the codes
+            var sum = result.reduce(function (r, i) {
+                return r+i;
+            }, 0);
+            if (sum > 0) {
+                logger.warn("some hooks did not run successfully");
+            } else {
+                logger.debug("all hooks finished", result);
+            }
+            deferred.resolve(sum);
+        });
+    } else {
+        deferred.reject("no depends");
+    }
     return deferred.promise();
 }
 
-readDependencies().then(function () {
-    // save the new config
-    vccutil.writeConfig(config).then(function () {
-        logger.info("Updated configuration");
-        // if we have dependencies, wait for them
-        if(config.depends) {
-            waitForDependencies().then(function () {
-                logger.info("ClusterNode cluster service dependencies satisfied");
-                logger.info("Running cluster service hooks (first-run)");
-                runServiceHooks().then(function () {
-                    logger.info("Service hooks complete");
+Wait4Deps.prototype.main = function () {
+    var me = this;
+    this.readDependencies().then(function () {
+        // save the new config
+        vccutil.writeConfig(me.config).then(function () {
+            logger.info("Updated configuration");
+            // if we have dependencies, wait for them
+            if(me.config.depends) {
+                me.waitForDependencies().then(function () {
+                    logger.info("ClusterNode cluster service dependencies satisfied");
+                    logger.info("Running cluster service hooks (first-run)");
+                    me.runServiceHooks().then(function () {
+                        logger.info("Service hooks complete");
+                    });
                 });
-            });
-        } else {
-            logger.debug("there are no cluster service dependencies");
-        }
-    }, function (err) {
-        logger.error("could not write config");
-        logger.error(err);
-    });
-    
-});
+            } else {
+                logger.debug("there are no cluster service dependencies");
+            }
+        }, function (err) {
+            logger.error("could not write config");
+            logger.error(err);
+        });
+    })
+}
+
+if (require.main === module) {
+    var wait4deps = new Wait4Deps(vccutil.getConfig());
+    wait4deps.main();
+} else {
+    module.exports = Wait4Deps;
+}
