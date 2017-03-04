@@ -1,7 +1,9 @@
 var path = require('path');
 
 var config = {
-	service: 'test'
+    cluster: {
+	    service: 'test'
+	}
 };
 
 describe('loadtargets', function () {
