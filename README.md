@@ -143,6 +143,14 @@ For development, just pull in the dependencies using the Node Package Manager.
 npm install
 ```
 
+### Running tests
+
+You need a discovery container accessible via localhost for some tests to complete. Start one like so using Docker
+
+```
+docker run -d --net=host hpchud/vcc-discovery
+```
+
 Run the test suite using the command
 
 ```
