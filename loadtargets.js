@@ -13,29 +13,29 @@ var logger = require("./log.js");
 // This is an init8js module, it runs in-process with the init in order to
 // register our cluster targets, so it must follow the service module pattern
 module.exports = {
-	servicePath: '/etc/vcc',
+    servicePath: '/etc/vcc',
     LoadTargets: function (service, config, targets, f_register_services) {
-	    var deferred = promise();
-	    var servicefile = path.join(module.exports.servicePath, "services-"+config.service+".yml");
-	    // make sure service targets definition file exists
-	    fs.stat(servicefile, function(err, stat) {
-	        if(err) {
-	        	if(err.code == 'ENOENT') {
-		            // no service file
-		            logger.error('There is no service definition for '+config.service);
-		            logger.error('Please create '+servicefile);
-		        } else {
-		            // something went wrong
-		            logger.error('unhandled error hook stat', servicefile);
-		        }
-		        deferred.reject(err);
-	        } else {
-	        	// parse the yaml file and register the targets
-	            logger.debug("Registering service provider targets for "+config.service);
-	            f_register_services(yaml.load(servicefile));
-	            deferred.resolve();
-	        }
-	    });
-	    return deferred.promise();
-	}
+        var deferred = promise();
+        var servicefile = path.join(module.exports.servicePath, "services-"+config.service+".yml");
+        // make sure service targets definition file exists
+        fs.stat(servicefile, function(err, stat) {
+            if(err) {
+                if(err.code == 'ENOENT') {
+                    // no service file
+                    logger.error('There is no service definition for '+config.service);
+                    logger.error('Please create '+servicefile);
+                } else {
+                    // something went wrong
+                    logger.error('unhandled error hook stat', servicefile);
+                }
+                deferred.reject(err);
+            } else {
+                // parse the yaml file and register the targets
+                logger.debug("Registering service provider targets for "+config.service);
+                f_register_services(yaml.load(servicefile));
+                deferred.resolve();
+            }
+        });
+        return deferred.promise();
+    }
 }
