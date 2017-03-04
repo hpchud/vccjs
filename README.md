@@ -143,6 +143,14 @@ For development, just pull in the dependencies using the Node Package Manager.
 npm install
 ```
 
+Run the test suite using the command
+
+```
+npm test
+```
+
+You will see some errors and warnings, this is normal - some tests are testing for errors! Some tests require root privileges to run and these will fail. _Do not run the rests as root on your real system_. They should be run in a container or otherwise disposable environment as they modify system files like `/etc/resolv.conf`.
+
 We would love to recieve pull requests and bug reports.
 
 # License
