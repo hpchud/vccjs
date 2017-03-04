@@ -34,13 +34,13 @@ module.exports = {
      */
     LoadTargets: function (service, config, targets, f_register_services) {
         var deferred = promise();
-        var servicefile = path.join(module.exports.servicePath, "services-"+config.service+".yml");
+        var servicefile = path.join(module.exports.servicePath, "services-"+config.cluster.service+".yml");
         // make sure service targets definition file exists
         fs.stat(servicefile, function(err, stat) {
             if(err) {
                 if(err.code == 'ENOENT') {
                     // no service file
-                    logger.error('There is no service definition for '+config.service);
+                    logger.error('There is no service definition for '+config.cluster.service);
                     logger.error('Please create '+servicefile);
                 } else {
                     // something went wrong
@@ -49,7 +49,7 @@ module.exports = {
                 deferred.reject(err);
             } else {
                 // parse the yaml file and register the targets
-                logger.debug("Registering service provider targets for "+config.service);
+                logger.debug("Registering service provider targets for "+config.cluster.service);
                 f_register_services(yaml.load(servicefile));
                 deferred.resolve();
             }
