@@ -52,14 +52,41 @@ describe('clusterdns', function () {
         })
     });
 
-    it('bind the server');
+    it('bind the server', function () {
+        ClusterDNS.listen(32353);
+    });
 
-    it('lookup test host (against server)');
+    it('lookup test host (against server)', function (done) {
+        var dns = require('dns-socket');
+        var socket = dns();
+        socket.query({
+            questions: [{
+                type: 'A',
+                name: 'testhost'
+            }]
+        }, 32353, '127.0.0.1', function (err, res) {
+            if(err) {
+                done(err);
+            } else {
+                if (res.answers[0].data == "127.0.0.1") {
+                    done();
+                } else {
+                    done("answer was wrong:"+res);
+                }
+            }
+        });
+    });
 
 });
 
 describe('clusterdns privileged', function () {
 
-    it('append to /etc/resolv.conf');
+    it('append to /etc/resolv.conf', function (done) {
+        ClusterDNS.prependResolv().then(function () {
+            done();
+        }, function (err) {
+            done(err);
+        });
+    });
 
 });

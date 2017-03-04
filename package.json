@@ -21,6 +21,7 @@
     "yamljs": "^0.2.8"
   },
   "devDependencies": {
+    "dns-socket": "^1.6.1",
     "jsdoc": "^3.4.3",
     "mocha": "^3.2.0"
   }
