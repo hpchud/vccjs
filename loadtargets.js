@@ -4,6 +4,7 @@ var os = require("os");
 var fs = require("fs");
 var promise = require("deferred");
 var yaml = require('yamljs');
+var path = require('path');
 
 var vccutil = require("./vccutil.js");
 var logger = require("./log.js");
@@ -12,10 +13,11 @@ var logger = require("./log.js");
 // This is an init8js module, it runs in-process with the init in order to
 // register our cluster targets, so it must follow the service module pattern
 module.exports = {
+	servicePath: '/etc/vcc',
     LoadTargets: function (service, config, targets, f_register_services) {
 	    var deferred = promise();
 	    var config = vccutil.getConfig(false, service.result_env['INIT_RUN_DIR']);
-	    var servicefile = "/etc/vcc/services-"+config.service+".yml";
+	    var servicefile = path.join(module.exports.servicePath, "services-"+config.service+".yml");
 	    // make sure service targets definition file exists
 	    fs.stat(servicefile, function(err, stat) {
 	        if(err == null) {
