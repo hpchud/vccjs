@@ -7,7 +7,15 @@ var vccutil = require("./vccutil.js");
 var logger = require("./log.js");
 var kvstore = require("./kvstore.js");
 
+/**
+ * Register service module
+ * @module registerservice
+ */
 
+/**
+ * Register the cluster service, if local service providers are configured
+ * @param {Object} config - A configuration object (usually loaded from vccutil.GetConfig)
+ */
 exports.registerService = function (config) {
     var deferred = promise();
     // register our service state if we are providing one
