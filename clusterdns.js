@@ -199,7 +199,7 @@ if (require.main === module) {
         if (process.getuid && process.getuid() === 0) {
             var port = 53;
             // prepend ourself to /etc/resolv.conf
-            prependResolv().then(function () {
+            clusterdns.prependResolv().then(function () {
                 logger.info("appended 127.0.0.1 to /etc/resolv.conf");
             }, function (err) {
                 logger.error("could not prepend /etc/resolv.conf", err);
