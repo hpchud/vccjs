@@ -1,0 +1,6 @@
+---
+
+testservice:
+    name: This is used for testing loadtargets
+    type: shell
+    exec: true
