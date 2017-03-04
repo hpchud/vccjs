@@ -199,13 +199,33 @@ Wait4Deps.prototype.runServiceHooks = function () {
 }
 
 /**
+ * Write a new version of the system config file (loaded by subsequent modules)
+ * @param {String} address - The determined IP address
+ * @returns {Promise}
+ */
+Wait4Deps.prototype.writeConfig = function () {
+    var deferred = promise();
+    logger.debug("going to write config");
+    vccutil.writeConfig(this.config).then(function () {
+        logger.info("updated config");
+        deferred.resolve();
+    },
+    function (err) {
+        logger.error("failed to write config");
+        logger.error(err);
+        deferred.reject(err);
+    });
+    return deferred.promise();
+};
+
+/**
  * The main function to call if we are loaded as a daemon
  */
 Wait4Deps.prototype.main = function () {
     var me = this;
     this.readDependencies().then(function () {
         // save the new config
-        vccutil.writeConfig(me.config).then(function () {
+        me.writeConfig().then(function () {
             logger.info("Updated configuration");
             // if we have dependencies, wait for them
             if(me.config.depends) {

@@ -139,3 +139,15 @@ describe('wait4deps', function () {
     });
 
 });
+
+describe('wait4deps privileged', function () {
+
+    it('can write new config file', function (done) {
+        Wait4Deps.writeConfig().then(function () {
+            done();
+        }, function (err) {
+            done(err);
+        });
+    });
+
+});
