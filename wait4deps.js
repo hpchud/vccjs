@@ -17,6 +17,11 @@ var kvstore = require("./kvstore.js");
 var fileStat = promise.promisify(fs.stat);
 
 
+/**
+ * Wait for cluster service dependencies
+ * @constructor
+ * @param {Object} config - A configuration object (usually loaded from vccutil.GetConfig)
+ */
 var Wait4Deps = function (config) {
     this.config = config;
     this.config.depends = null;
@@ -28,6 +33,10 @@ var Wait4Deps = function (config) {
     this.depfile = "/etc/vcc/dependencies.yml";
 }
 
+/**
+ * Read the dependencies.yml file and process cluster service dependencies and local service providers
+ * @returns {Promise}
+ */
 Wait4Deps.prototype.readDependencies = function () {
     var deferred = promise();
     var me = this;
@@ -69,6 +78,11 @@ Wait4Deps.prototype.readDependencies = function () {
     return deferred.promise();
 }
 
+/**
+ * Get a cluster service provider from the discovery KV store
+ * @param {String} service - cluster service name
+ * @returns {Promise}
+ */
 Wait4Deps.prototype.getServiceFromKV = function (service) {
     var deferred = promise();
     // the key we want
@@ -82,6 +96,10 @@ Wait4Deps.prototype.getServiceFromKV = function (service) {
     return deferred.promise();
 }
 
+/**
+ * Wait for the providers of dependent cluster services to become ready
+ * @returns {Promise}
+ */
 Wait4Deps.prototype.waitForDependencies = function () {
     var me = this;
     var deferred = promise();
@@ -122,6 +140,12 @@ Wait4Deps.prototype.waitForDependencies = function () {
     return deferred.promise();
 }
 
+/**
+ * Utility function to run a service hook with error handling and output logging
+ * @param {String} service - cluster service name
+ * @param {String} host - hostname of the provider for this cluster service
+ * @returns {Promise}
+ */
 Wait4Deps.prototype.runHook = function (service, host) {
     var deferred = promise();
     var script = path.join(this.hook_dir, service + ".sh");
@@ -145,6 +169,10 @@ Wait4Deps.prototype.runHook = function (service, host) {
     return deferred.promise();
 }
 
+/**
+ * Dispatch calls to runHook() in parallel, resolve once all hooks are finished
+ * @returns {Promise}
+ */
 Wait4Deps.prototype.runServiceHooks = function () {
     var me = this;
     var deferred = promise();
@@ -170,6 +198,9 @@ Wait4Deps.prototype.runServiceHooks = function () {
     return deferred.promise();
 }
 
+/**
+ * The main function to call if we are loaded as a daemon
+ */
 Wait4Deps.prototype.main = function () {
     var me = this;
     this.readDependencies().then(function () {
