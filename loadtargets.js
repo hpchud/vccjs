@@ -16,7 +16,6 @@ module.exports = {
 	servicePath: '/etc/vcc',
     LoadTargets: function (service, config, targets, f_register_services) {
 	    var deferred = promise();
-	    var config = vccutil.getConfig(false, service.result_env['INIT_RUN_DIR']);
 	    var servicefile = path.join(module.exports.servicePath, "services-"+config.service+".yml");
 	    // make sure service targets definition file exists
 	    fs.stat(servicefile, function(err, stat) {
