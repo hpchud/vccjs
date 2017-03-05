@@ -82,9 +82,17 @@ pbsnodes
 This should show output like the following
 
 ```
+vnode_23323f91cbe6
+state = free
+power_state = Running
+np = 8
+ntype = cluster
+status = rectime=1488672384,cpuclock=Fixed <...>
+mom_service_port = 15002
+mom_manager_port = 15003
 ```
 
-To run the test job to confirm that the functionality is working as expected, switch to the `batchuser` account and submit the `hello.job` file to the resource manager.
+A test job can be run to confirm that the cluster is working as expected: switch to the `batchuser` account and submit the `hello.job` file to the resource manager.
 
 ```
 # su batchuser
@@ -93,7 +101,7 @@ $ qsub hello.job
 $ qstat
 ```
 
-This job will compile a short MPI test program and execute it. After a few moments, the expected output can be found in a file in the same directory.
+This job will compile a short MPI test program and execute it. After a few moments, the expected output can be found in a new file in the current directory.
 
 More information about this image can be found in the [hpchud/vcc-torque](https://github.com/hpchud/vcc-torque) repository.
 
