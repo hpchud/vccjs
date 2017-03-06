@@ -1,5 +1,9 @@
 var assert = require('assert');
 var yaml = require('yamljs');
+var path = require('path');
+var tmp = require('tmp');
+var fs = require('fs-extra');
+var file_compare = require('file-compare');
 
 var clusterdns = null;
 var ClusterDNS = null;
@@ -31,6 +35,30 @@ describe('clusterdns', function () {
             done();
         }, function (err) {
             done(err);
+        });
+    });
+
+    it('create a temporary file for the next test', function () {
+        var tempfile = tmp.fileSync();
+        fs.copySync(path.join(process.cwd(), 'test/resolv.conf'), tempfile.name);
+        ClusterDNS.resolv_path = tempfile.name;
+    });
+
+    it('prepend to resolvconf', function (done) {
+        ClusterDNS.prependResolv().then(function () {
+            done();
+        }, function (err) {
+            done(err);
+        });
+    });
+
+    it('check that the prepended resolvconf is correct', function (done) {
+        file_compare.compare(path.join(process.cwd(), 'test/resolv.conf.prepended'), ClusterDNS.resolv_path, function (result) {
+            if (result) {
+                done();
+            } else {
+                done("files did not match");
+            }
         });
     });
 
@@ -74,18 +102,6 @@ describe('clusterdns', function () {
                     done("answer was wrong:"+res);
                 }
             }
-        });
-    });
-
-});
-
-describe('clusterdns privileged', function () {
-
-    it('append to /etc/resolv.conf', function (done) {
-        ClusterDNS.prependResolv().then(function () {
-            done();
-        }, function (err) {
-            done(err);
         });
     });
 

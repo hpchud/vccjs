@@ -23,6 +23,7 @@
   "devDependencies": {
     "dns-socket": "^1.6.1",
     "file-compare": "0.0.2",
+    "fs-extra": "^2.0.0",
     "jsdoc": "^3.4.3",
     "mocha": "^3.2.0",
     "tmp": "0.0.31"
