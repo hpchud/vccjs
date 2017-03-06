@@ -145,7 +145,7 @@ See the wiki.
 
 This repository contains the VCC tool and service daemons. It is written in Node.js and shell scripts for the service hooks. 
 
-For development, just pull in the dependencies using the Node Package Manager.
+For development, just pull in both the runtime and development dependencies using the Node Package Manager.
 
 ```
 npm install
@@ -165,7 +165,9 @@ Run the test suite using the command
 npm test
 ```
 
-You will see some errors and warnings, this is normal - some tests are testing for errors! Some tests require root privileges to run and these will fail. **Do not run the tests as root on your real system.** They should be run in a container or otherwise disposable environment as they modify system files like `/etc/resolv.conf`.
+You will see some errors and warnings, this is normal - some tests are testing for errors!
+
+### Contributing
 
 We would love to recieve pull requests and bug reports.
 
