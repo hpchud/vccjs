@@ -79,6 +79,8 @@ Now you can log in to the headnode and see that the cluster is running
 docker exec -it headnode /bin/bash
 ```
 
+After a few moments, run the command
+
 ```
 pbsnodes
 ```
@@ -95,6 +97,8 @@ status = rectime=1488672384,cpuclock=Fixed <...>
 mom_service_port = 15002
 mom_manager_port = 15003
 ```
+
+If you recieve a message saying the node list is empty, the discovery process has not yet finished - just wait a few more seconds and run it again.
 
 A test job can be run to confirm that the cluster is working as expected: switch to the `batchuser` account and submit the `hello.job` file to the resource manager.
 
