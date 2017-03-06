@@ -13,32 +13,41 @@ var logger = require("./log.js");
 var kvstore = require("./kvstore.js");
 
 
-var config = vccutil.getConfig();
-logger.info("ClusterDNS initialised with config", config);
+/**
+ * The ClusterWatcher
+ * @constructor
+ * @param {Object} config - A configuration object (usually loaded from vccutil.GetConfig)
+ */
+var ClusterWatcher = function (config) {
+    logger.info("ClusterWatcher initialised with config", config);
+    this.config = config;
+    this.kv = new kvstore();
+    this.kv.connect(config.kvstore.host, config.kvstore.port);
+    // host cache
+    this.lasthosts = {};
+    // on change handlers
+    this.on_change = [this.runClusterHooks];
+    // the timer id for cluster changed
+    this.changed_timeout = null;
+    // poll frequency
+    this.poll_ms = 5000;
+    // time to detect settle
+    this.settle_ms = 10000;
+    // path to hosts.vcc file
+    this.host_path = "/etc/hosts.vcc";
+    // the glob to find the cluster hooks
+    this.hook_dir = "/etc/vcc/cluster-hooks.d/*.sh";
+}
 
-
-// connect kv store
-var kv = new kvstore();
-kv.connect(config.kvstore.host, config.kvstore.port);
-
-
-// host cache
-var lasthosts = {};
-// on change handlers
-var on_change = [runClusterHooks];
-// the timer id for cluster changed
-var changed_timeout = null;
-// poll frequency
-var poll_ms = 5000;
-// time to detect settle
-var settle_ms = 10000;
-
-
-var writeHosts = function (hosts) {
+/**
+ * Write the list of hosts to /etc/hosts.vcc in the same format as /etc/hosts
+ * @param {Object} hosts - An object consisting of host/IP key/value pairs
+ * @returns {Promise}
+ */
+ClusterWatcher.prototype.writeHosts = function (hosts) {
     var deferred = promise();
     // write host file in /etc/hosts format
-    var hostpath = "/etc/hosts.vcc";
-    var file = fs.createWriteStream(hostpath);
+    var file = fs.createWriteStream(this.host_path);
     // on error we should log it
     file.on('error', function(err) {
         deferred.reject(err);
@@ -57,7 +66,12 @@ var writeHosts = function (hosts) {
     return deferred.promise();
 }
 
-var runHook = function (script) {
+/**
+ * Utility function to run a cluster hook with error handling and output logging
+ * @param {String} script - The path to the shell script to run
+ * @returns {Promise}
+ */
+ClusterWatcher.prototype.runHook = function (script) {
     var deferred = promise();
     var proc = child_process.spawn("/bin/sh", [script]);
     // start script and resolve once it exits
@@ -72,13 +86,18 @@ var runHook = function (script) {
     return deferred.promise();
 }
 
-var runClusterHooks = function (hosts) {
+/**
+ * Dispatch calls to runHook() in parallel, resolve once all hooks are finished
+ * @returns {Promise}
+ */
+ClusterWatcher.prototype.runClusterHooks = function () {
+    var me = this;
     var deferred = promise();
-    var hook_dir = "/etc/vcc/cluster-hooks.d/*.sh";
+    console.log(this.hook_dir);
     // use glob to find all sh scripts in the hook_dir
-    glob(hook_dir).then(function (files) {
+    glob(this.hook_dir).then(function (files) {
         promise.map(files, function (file) {
-            return runHook(file);
+            return me.runHook(file);
         })(function (result) {
             // reduce the codes
             var sum = result.reduce(function (r, i) {
@@ -98,8 +117,12 @@ var runClusterHooks = function (hosts) {
     return deferred.promise();
 }
 
-var watchCluster = function () {
-    kv.list("/cluster/"+config.cluster+"/hosts", true).then(function (hosts) {
+/**
+ * The main loop to watch the discovery KV store for changes
+ */
+ClusterWatcher.prototype.watchCluster = function () {
+    var me = this;
+    this.kv.list("/cluster/"+this.config.cluster+"/hosts", true).then(function (hosts) {
         // sort the host list
         var currenthosts = Object.keys(hosts).sort().reduce(function (result, key) {
             result[key] = hosts[key];
@@ -107,19 +130,19 @@ var watchCluster = function () {
         }, {});
         logger.debug(Object.keys(currenthosts).length, "hosts in cluster");
         // compare with lasthosts
-        if (JSON.stringify(currenthosts) === JSON.stringify(lasthosts)) {
+        if (JSON.stringify(currenthosts) === JSON.stringify(me.lasthosts)) {
             logger.debug("cluster has not changed");
             // cluster not changed, schedule next loop
-            lasthosts = currenthosts;
-            setTimeout(watchCluster, poll_ms);
+            me.lasthosts = currenthosts;
+            setTimeout(me.watchCluster, me.poll_ms);
         } else {
             // cluster has changed
             // see if it changed before we managed to run the hooks from the last change
             // and if so, do not run the hooks from the last change
-            if (changed_timeout) {
+            if (me.changed_timeout) {
                 logger.warn("cluster is not settled, changed before we ran handlers");
                 logger.debug("clearing existing timeout for cluster changed event");
-                clearTimeout(changed_timeout);
+                clearTimeout(me.changed_timeout);
             }
             // dispatch the changed timeout event
             logger.debug("cluster changed, dispatch timeout for cluster changed event");
@@ -128,19 +151,20 @@ var watchCluster = function () {
                     // cluster changed handler
                     logger.debug("run cluster changed event");
                     logger.debug("writing hosts");
-                    writeHosts(currenthosts).then(function () {
-                        logger.debug("written /etc/hosts.vcc");
+                    me.writeHosts(currenthosts).then(function () {
+                        logger.debug("written "+me.host_path);
                         logger.debug("running cluster hooks now");
-                        // run cluster hooks
-                        runClusterHooks(currenthosts).then(function () {
+                        promise.map(me.on_change, function (handler) {
+                            return handler.bind(me)();
+                        })(function () {
                             // cluster hooks done, schedule next loop
-                            lasthosts = currenthosts;
-                            setTimeout(watchCluster, poll_ms);
-                        })
+                            me.lasthosts = currenthosts;
+                            setTimeout(me.watchCluster, me.poll_ms);
+                        });
                     }, function (err) {
                         logger.error("could not write /etc/hosts.vcc", err);
                     });
-                }, settle_ms);
+                }, me.settle_ms);
             })(currenthosts);
         }
     }, function (err) {
@@ -148,5 +172,9 @@ var watchCluster = function () {
     }).done();
 }
 
-
-watchCluster();
+if (require.main === module) {
+    var clusterwatcher = new ClusterWatcher(vccutil.getConfig());
+    clusterwatcher.watchCluster();
+} else {
+    module.exports = ClusterWatcher;
+}
