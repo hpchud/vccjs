@@ -14,6 +14,8 @@ The interactions between each component required to support the parallel applica
 
 # How do I use it?
 
+To follow the instructions in this readme, you will need to [install Docker](https://docs.docker.com/engine/installation/).
+
 This repository holds the Javascript implementation of the *Virtual Container Cluster*. The technical documentation is on the [Wiki pages](https://github.com/hpchud/vccjs/wiki).
 
 A container image built using the VCC contains a large number of components. If you already have one, you can find out more about it by invoking the tool:
@@ -67,7 +69,9 @@ docker run -d --name=workernode --link discovery:discovery \
     --service=workernode
 ```
 
-You can add as many workernodes as you like. If you expose the containers to the network, using `--net=host`, you may start the containers on different Docker hosts (in this case, use the real IP addresses instead of Docker `--link`s).
+You can add as many workernodes as you like.
+
+If you expose the containers to the network, using `--net=host`, you may start the containers on different Docker hosts - in this case, use the real IP address of the host running the discovery container instead of a Docker link for the `--storage-host` option.
 
 Now you can log in to the headnode and see that the cluster is running
 
@@ -145,7 +149,7 @@ See the wiki.
 
 This repository contains the VCC tool and service daemons. It is written in Node.js and shell scripts for the service hooks. 
 
-For development, just pull in the dependencies using the Node Package Manager.
+For development, just pull in both the runtime and development dependencies using the Node Package Manager.
 
 ```
 npm install
@@ -165,7 +169,9 @@ Run the test suite using the command
 npm test
 ```
 
-You will see some errors and warnings, this is normal - some tests are testing for errors! Some tests require root privileges to run and these will fail. **Do not run the tests as root on your real system.** They should be run in a container or otherwise disposable environment as they modify system files like `/etc/resolv.conf`.
+You will see some errors and warnings, this is normal - some tests are testing for errors!
+
+### Contributing
 
 We would love to recieve pull requests and bug reports.
 
