@@ -27,6 +27,8 @@ var ClusterDNS = function (config) {
     // local cache
     this.cache = {};
     this.cache_ttl = 60;
+    // path to resolvconf
+    this.resolv_path = '/etc/resolv.conf';
 }
 
 /**
@@ -45,7 +47,7 @@ ClusterDNS.prototype.registerName = function () {
 ClusterDNS.prototype.prependResolv = function () {
     var deferred = promise();
     // this function adds ourself to the top of /etc/resolv.conf
-    prependFile('/etc/resolv.conf', 'nameserver 127.0.0.1\n', function(err) {
+    prependFile(this.resolv_path, 'nameserver 127.0.0.1\n', function(err) {
         if (err) {
             deferred.reject(err);
         }
