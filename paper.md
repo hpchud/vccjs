@@ -30,6 +30,6 @@ However, scientific software often depends on a system foundation that provides 
 
 As a greater demand to accomodate a diverse range of disciplines is placed on high performance and cluster resources, the ability to quicky create and teardown reproducible, transitory virtual environments that are tailored for an individual task or experiment will be essential.
 
-The Virtual Container Cluster (VCC) is a framework for building containers that achieve this goal, by encapsulating a parallel application along with an execution model, through a set of dependency linked services and built-in process orchestration. This promotes a high degree of portability, and offers easier reproducibility by shipping the application along with everything required to execute it - whether that be an MPI cluster, big data processing framework, bioinformatics pipeline, or any other execution model.
+The Virtual Container Cluster (VCC) is a framework for building containers that achieve this goal, by encapsulating a parallel application along with an execution model, through a set of dependency linked services and built-in process orchestration. This promotes a high degree of portability, and offers easier reproducibility by shipping the application along with the foundation required to execute it - whether that be an MPI cluster, big data processing framework, bioinformatics pipeline, or any other execution model.
 
 # References
