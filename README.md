@@ -14,6 +14,8 @@ The interactions between each component required to support the parallel applica
 
 # How do I use it?
 
+To follow the instructions in this readme, you will need to [install Docker](https://docs.docker.com/engine/installation/).
+
 This repository holds the Javascript implementation of the *Virtual Container Cluster*. The technical documentation is on the [Wiki pages](https://github.com/hpchud/vccjs/wiki).
 
 A container image built using the VCC contains a large number of components. If you already have one, you can find out more about it by invoking the tool:
