@@ -1,6 +1,8 @@
 var assert = require('assert');
 var path = require('path');
 var yaml = require('yamljs');
+var fs = require('fs-extra');
+var tmp = require('tmp');
 
 var wait4deps = null;
 var Wait4Deps = null;
@@ -138,9 +140,15 @@ describe('wait4deps', function () {
         });
     });
 
-});
+    it('create temporary directory for next test', function () {
+        var tempdir = tmp.dirSync();
+        process.env['INIT_RUN_DIR'] = tempdir.name;
 
-describe('wait4deps privileged', function () {
+    });
+
+    it('copy a test init.yml to the temporary directory', function () {
+        fs.copySync(path.join(process.cwd(), 'init.yml'), path.join(process.env['INIT_RUN_DIR'], '/init.yml'));
+    });
 
     it('can write new config file', function (done) {
         Wait4Deps.writeConfig().then(function () {

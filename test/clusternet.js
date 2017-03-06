@@ -1,10 +1,12 @@
 var assert = require('assert');
 var yaml = require('yamljs');
+var path = require('path');
+var fs = require('fs-extra');
+var tmp = require('tmp');
 
 var clusternet = null;
 var ClusterNet = null;
 var config = null;
-
 
 describe('clusternet', function () {
 
@@ -135,9 +137,15 @@ describe('clusternet', function () {
         assert.ok(cn.hasAvailableInterface());
     });
 
-});
+    it('create temporary directory for next test', function () {
+        var tempdir = tmp.dirSync();
+        process.env['INIT_RUN_DIR'] = tempdir.name;
 
-describe('clusternet privileged', function () {
+    });
+
+    it('copy a test init.yml to the temporary directory', function () {
+        fs.copySync(path.join(process.cwd(), 'init.yml'), path.join(process.env['INIT_RUN_DIR'], '/init.yml'));
+    });
 
     it('can write new config file', function (done) {
         ClusterNet.writeConfig('127.0.0.1').then(function () {
