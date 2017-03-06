@@ -80,7 +80,7 @@ ClusterNet.prototype.parseInterfacesList = function () {
     var ip_to_name = this.interfaces_list.reduce(function (r, i) {
         if (!me.filterInterface(i)) {
             if (i.ip_address) {
-                r[i.name] = i.ip_address;
+                r[i.ip_address] = i.name;
             }
         }
         return r;
