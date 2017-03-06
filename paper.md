@@ -24,7 +24,7 @@ bibliography: paper.bib
 
 # Summary
 
-The problem of portability and reproducibility of the software used to conduct computational experiments has recently come to the fore. Container virtualisation has proved to be a powerful tool to achieve portability of a code and it's execution environment, through runtimes such as Docker, LXC, Singularity and others.
+The problem of portability and reproducibility of the software used to conduct computational experiments has recently come to the fore. Container virtualisation has proved to be a powerful tool to achieve portability of a code and it's execution environment, through runtimes such as Docker, LXC, Singularity and others - without the performance cost of traditional Virtual Machines.
 
 However, scientific software often depends on a system foundation that provides middleware, libraries, and other supporting software in order for the code to execute as intended. Typically, container virtualisation addresses only the portability of the code itself, which does not make it inherently reproducible. For example, a containerized MPI application may offer binary compatibility between different systems, but for execution _as intended_, it must be run on an existing cluster that provides the correct interfaces for parallel MPI execution.
 
