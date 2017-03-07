@@ -134,7 +134,7 @@ ClusterWatcher.prototype.watchCluster = function () {
             logger.debug("cluster has not changed");
             // cluster not changed, schedule next loop
             me.lasthosts = currenthosts;
-            setTimeout(me.watchCluster, me.poll_ms);
+            setTimeout(me.watchCluster.bind(me), me.poll_ms);
         } else {
             // cluster has changed
             // see if it changed before we managed to run the hooks from the last change
@@ -159,7 +159,7 @@ ClusterWatcher.prototype.watchCluster = function () {
                         })(function () {
                             // cluster hooks done, schedule next loop
                             me.lasthosts = currenthosts;
-                            setTimeout(me.watchCluster, me.poll_ms);
+                            setTimeout(me.watchCluster.bind(me), me.poll_ms);
                         });
                     }, function (err) {
                         logger.error("could not write /etc/hosts.vcc", err);
