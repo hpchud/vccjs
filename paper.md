@@ -28,7 +28,7 @@ The problem of portability and reproducibility of the software used to conduct c
 
 However, scientific software often depends on a system foundation that provides middleware, libraries, and other supporting software in order for the code to execute as intended. Typically, container virtualisation addresses only the portability of the code itself, which does not make it inherently reproducible. For example, a containerized MPI application may offer binary compatibility between different systems, but for execution _as intended_, it must be run on an existing cluster that provides the correct interfaces for parallel MPI execution.
 
-As a greater demand to accomodate a diverse range of disciplines is placed on high performance and cluster resources, the ability to quicky create and teardown reproducible, transitory virtual environments that are tailored for an individual task or experiment will be essential.
+As a greater demand to accomodate a diverse range of disciplines is placed on high performance and cluster resources, the ability to quickly create and teardown reproducible, transitory virtual environments that are tailored for an individual task or experiment will be essential.
 
 The Virtual Container Cluster (VCC) is a framework for building containers that achieve this goal, by encapsulating a parallel application along with an execution model, through a set of dependency linked services and built-in process orchestration. This promotes a high degree of portability, and offers easier reproducibility by shipping the application along with the foundation required to execute it - whether that be an MPI cluster, big data processing framework, bioinformatics pipeline, or any other execution model.
 
