@@ -17,7 +17,7 @@ if test "$1" = 'update'; then
 		UPDATEFILE="`pwd`/vcc-new"
 	fi
 	wget -O $UPDATEFILE $SCRIPTURL 2>&1 >/dev/null
-	CURRENTFILE="`pwd`/$0"
+	CURRENTFILE="$0"
 	if test "$?" = '0'; then
 		# create a backup of the old script
 		cp $CURRENTFILE ${CURRENTFILE}.bak
