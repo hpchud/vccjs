@@ -5,6 +5,14 @@ VCCIMAGE="hpchud/vcc-torque:latest"
 SCRIPTVERSION="master"
 SCRIPTURL="https://raw.githubusercontent.com/hpchud/vccjs/$SCRIPTVERSION/vcc"
 
+error_exit()
+{
+	echo "An error occurred: $@"
+	echo "Check proxy settings if applicable."
+	echo 'If the script is installed in a system folder, e.g. /usr/bin, you might need root privileges to update it.'
+	exit 1
+}
+
 if test "$1" = 'update'; then
 	echo "Updating VCC tool..."
 	echo ""
@@ -17,20 +25,14 @@ if test "$1" = 'update'; then
 		UPDATEFILE="`pwd`/vcc-new"
 	fi
 	CURRENTFILE="$0"
-	wget -O $UPDATEFILE $SCRIPTURL 2>&1 >/dev/null
-	if test "$?" = '0'; then
-		# create a backup of the old script
-		cp $CURRENTFILE ${CURRENTFILE}.bak
-		# move the updated version to replace the current version
-		echo "Replacing $CURRENTFILE with $UPDATEFILE..."
-		mv $UPDATEFILE $CURRENTFILE
-		chmod a+x $CURRENTFILE
-		echo "The VCC tool has been updated."
-	else
-			echo 'There was a problem updating the script. Check proxy settings.'
-			echo 'If the script is installed in a system folder, e.g. /usr/bin, you might need root privileges to update it.'
-			exit 1
-	fi
+	wget -O $UPDATEFILE $SCRIPTURL 2>&1 >/dev/null || error_exit "Could not download script"
+	# create a backup of the old script
+	cp $CURRENTFILE ${CURRENTFILE}.bak || error_exit "Could not backup current vcc script"
+	# move the updated version to replace the current version
+	echo "Replacing $CURRENTFILE with $UPDATEFILE..."
+	mv $UPDATEFILE $CURRENTFILE || error_exit "Could not replace current vcc script"
+	chmod 755 $CURRENTFILE || error_exit "Could not set mode 755 on the vcc script"
+	echo "The VCC tool has been updated."
 	echo "Pulling Docker images"
 	echo ""
 	docker pull $VCCIMAGE
