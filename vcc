@@ -19,6 +19,9 @@ if test "$1" = 'update'; then
 	wget -O $UPDATEFILE $SCRIPTURL 2>&1 >/dev/null
 	CURRENTFILE="`pwd`/$0"
 	if test "$?" = '0'; then
+		# create a backup of the old script
+		cp $CURRENTFILE ${CURRENTFILE}.bak
+		# move the updated version to replace the current version
 		mv $UPDATEFILE $CURRENTFILE
 		chmod a+x $CURRENTFILE
 		echo "The VCC tool has been updated."
