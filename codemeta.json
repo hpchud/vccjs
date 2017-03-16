@@ -19,5 +19,5 @@
   "keywords": "containers, HPC, reproducibility, virtualisation, cluster",
   "license": "MIT",
   "title": "vcc",
-  "version": "v1.0"
+  "version": "v1.1"
 }
