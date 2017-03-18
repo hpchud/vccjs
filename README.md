@@ -123,14 +123,14 @@ More information about this image can be found in the [hpchud/vcc-torque](https:
 
 This script was designed to support an educational environment, and will provision a Torque/PBS cluster, with 1 head node and 1 worker node, using the Docker container runtime.
 
-Download the script from the `v1.0` release:
+Download the script from the `v1.1` release somewhere on your path, perhaps `$HOME/bin` or `/usr/local/bin`:
 
 ```
-wget -O /usr/local/bin/vcc https://github.com/hpchud/vccjs/releases/download/v1.0/vcc
+wget -O $HOME/bin/vcc https://github.com/hpchud/vccjs/releases/download/v1.1/vcc
 ```
 
 ```
-chmod a+x /usr/local/bin/vcc
+chmod a+x $HOME/bin/vcc
 ```
 
 Run the update to make sure the Docker images are downloaded:
