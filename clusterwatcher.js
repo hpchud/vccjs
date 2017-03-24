@@ -34,7 +34,7 @@ var ClusterWatcher = function (config) {
     // time to detect settle
     this.settle_ms = 10000;
     // path to hosts.vcc file
-    this.host_path = "/etc/hosts.vcc";
+    this.host_path = path.join(vccutil.getRunDir(), "hosts.vcc");
     // the glob to find the cluster hooks
     this.hook_dir = "/etc/vcc/cluster-hooks.d/*.sh";
 }
@@ -162,7 +162,7 @@ ClusterWatcher.prototype.watchCluster = function () {
                             setTimeout(me.watchCluster.bind(me), me.poll_ms);
                         });
                     }, function (err) {
-                        logger.error("could not write /etc/hosts.vcc", err);
+                        logger.error("could not write hosts.vcc", err);
                     });
                 }, me.settle_ms);
             })(currenthosts);
