@@ -12,6 +12,12 @@ This allows fast setup and teardown of complex virtual environments to support d
 
 The interactions between each component required to support the parallel application are modeled through a set of dependency linked services and related hooks that must be run when the providers of a service, or the number of hosts running the application, are changed.
 
+## Scope
+
+The VCC is mostly un-opinionated on how the software you wish to run is actually installed - for this you might choose a package manager like Nix, Guix, or one that comes with the programming language (like `npm` for Node.js). Alternatively, your Dockerfile might just contain the directives to compile the exact environment from source.
+
+The VCC aims to fill the gap between the OS and the isolated software, where the isolated software (or libraries it depends on) expect an certain execution model. For example, it is trivial to package a parallel MPI program in a portable way. However, for execution as intended, it must be run on a system providing the correct interfaces for parallel MPI execution - i.e. _a cluster_. Same goes for other kinds of applications, such as Hadoop. If you don't have the appropriate system for execution available, or you have a different kind of system, you might be stuck. The VCC takes the approach that this dependency on a _logical execution model_ is just as much a part of a reproducible experiment as the code, artefact and resulting publication.
+
 # How do I use it?
 
 To follow the instructions in this readme, you will need to [install Docker](https://docs.docker.com/engine/installation/).
@@ -117,14 +123,14 @@ More information about this image can be found in the [hpchud/vcc-torque](https:
 
 This script was designed to support an educational environment, and will provision a Torque/PBS cluster, with 1 head node and 1 worker node, using the Docker container runtime.
 
-Download the script from the `v1.0` release:
+Download the script from the `v1.1` release somewhere on your path, perhaps `$HOME/bin` or `/usr/local/bin`:
 
 ```
-wget -O /usr/local/bin/vcc https://github.com/hpchud/vccjs/releases/download/v1.0/vcc
+wget -O $HOME/bin/vcc https://github.com/hpchud/vccjs/releases/download/v1.1/vcc
 ```
 
 ```
-chmod a+x /usr/local/bin/vcc
+chmod a+x $HOME/bin/vcc
 ```
 
 Run the update to make sure the Docker images are downloaded:
