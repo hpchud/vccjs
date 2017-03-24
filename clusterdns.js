@@ -195,8 +195,8 @@ ClusterDNS.prototype.listen = function (port) {
 
 if (require.main === module) {
     var config = vccutil.getConfig();
+    var clusterdns = new ClusterDNS(config);
     if (!config.nodns) {
-        var clusterdns = new ClusterDNS(config);
         // work out what port we should use
         if (process.getuid && process.getuid() === 0) {
             var port = 53;
