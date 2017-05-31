@@ -13,6 +13,8 @@ opt = require('node-getopt').create([
   ['', 'force-address=IP', 'manually set the advertised IP of this instance'],
   ['', 'no-dns', 'don\'t use the ClusterDNS service'],
   ['', 'usermode', 'always run services as the calling user'],
+  ['', 'fluentd-host=ADDRESS:PORT', 'use fluentd for logging'],
+  ['', 'fluentd-tag=TAG', 'the tag to use for logging (default: vcc)'],
   //['', 'eval', 'format output suitable to eval in the host shell'],
   ['', 'just-yml', 'just dump the generated cluster init.yml and nothing else'],
   ['i', 'info', 'display information about this vcc image'],
@@ -127,6 +129,14 @@ var runcommand = "/init8js/init.js ";
 // add usermode option if required
 if (options.usermode) {
     runcommand += "usermode ";
+}
+// add fluentd-host option if required
+if (options['fluentd-host']) {
+    runcommand += "fluentd="+options['fluentd-host']+" ";
+}
+// add fluentd-tag option if required
+if (options['fluentd-tag']) {
+    runcommand += "fluentd_tag="+options['fluentd-tag']+" ";
 }
 runcommand += "b64inityml="+b64inityml;
 // output the commands in the desired format
