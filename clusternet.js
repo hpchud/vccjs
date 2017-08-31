@@ -113,14 +113,15 @@ ClusterNet.prototype.hasSavedAddress = function () {
 }
 
 /**
- * See if we have an IP address on a Weave interface
+ * See if we have an exposed IP address on the Weave interface
+ * (not a dynamic ethwe* interface)
  * @returns {String|Boolean} the IP address, or false if not
  */
 ClusterNet.prototype.hasWeaveInterface = function () {
     // see if there is a weave interface
-    if('ethwe' in this.name_to_ip) {
+    if('weave' in this.name_to_ip) {
         logger.debug("found weave interface");
-        return this.name_to_ip['ethwe'];
+        return this.name_to_ip['weave'];
     } else {
         logger.debug("there is no weave interface");
         return false;
