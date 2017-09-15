@@ -104,7 +104,7 @@ describe('clusternet', function () {
 
     it('does have weave interface', function () {
         var cn = new clusternet();
-        cn.name_to_ip = {'ethwe': '172.17.4.16'};
+        cn.name_to_ip = {'weave': '172.17.4.16'};
         assert.ok(cn.hasWeaveInterface());
     });
 
