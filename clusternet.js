@@ -113,6 +113,23 @@ ClusterNet.prototype.hasSavedAddress = function () {
 }
 
 /**
+ * See if we have a dynamic ethwe* interface with an IP address
+ * @returns {String|Boolean} the IP address, or false if not
+ */
+ClusterNet.prototype.hasEthweInterface = function () {
+    // see if there is a ethwe
+    for(var iface in this.name_to_ip) {
+        if(iface.includes('ethwe')) {
+            logger.debug("found ethwe* interface");
+            return this.name_to_ip[iface];
+        } else {
+            logger.debug("there is no ethwe* interface");
+            return false;
+        }
+    }
+}
+
+/**
  * See if we have an exposed IP address on the Weave interface
  * (not a dynamic ethwe* interface)
  * @returns {String|Boolean} the IP address, or false if not
@@ -166,6 +183,10 @@ ClusterNet.prototype.hasAvailableInterface = function () {
 ClusterNet.prototype.getAddress = function () {
     // try our options
     var ip = this.hasSavedAddress();
+    if(ip) {
+        return ip;
+    }
+    ip = this.hasEthweInterface();
     if(ip) {
         return ip;
     }
