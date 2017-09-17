@@ -104,7 +104,7 @@ describe('clusternet', function () {
 
     it('does have ethwe interface', function () {
         var cn = new clusternet();
-        cn.name_to_ip = {'ethwe-12345': '172.17.4.16'};
+        cn.name_to_ip = {'eno1': '172.17.4.16', 'ethwe-12345': '172.17.4.16'};
         assert.ok(cn.hasEthweInterface());
     });
 
@@ -116,7 +116,7 @@ describe('clusternet', function () {
 
     it('does have weave interface', function () {
         var cn = new clusternet();
-        cn.name_to_ip = {'weave': '172.17.4.16'};
+        cn.name_to_ip = {'eno1': '172.17.4.16', 'weave': '172.17.4.16'};
         assert.ok(cn.hasWeaveInterface());
     });
 
