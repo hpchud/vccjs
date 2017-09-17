@@ -122,11 +122,10 @@ ClusterNet.prototype.hasEthweInterface = function () {
         if(iface.includes('ethwe')) {
             logger.debug("found ethwe* interface");
             return this.name_to_ip[iface];
-        } else {
-            logger.debug("there is no ethwe* interface");
-            return false;
         }
     }
+    logger.debug("there is no ethwe* interface");
+    return false;
 }
 
 /**
