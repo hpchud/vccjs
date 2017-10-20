@@ -105,7 +105,30 @@ elif test "$1" = 'setuplab'; then
 		--service=workernode
 	docker start headnode
 	docker start workernode
+elif test "$1" = 'setupheadnode'; then
+	docker run -d --net=host --restart=always hpchud/vcc-discovery
+	docker run -d --link discovery:discovery \
+		--name=headnode \
+		-v /cluster:/cluster \
+		--net=host \
+		--privileged \
+		$VCCIMAGE \
+		--cluster=testlab \
+		--storage-host=127.0.0.1 \
+		--storage-port=2379 \
+		--service=headnode
+	docker start headnode
+elif test "$1" = 'setupworkernode'; then
+	docker run -d --link discovery:discovery \
+		--name=workernode \
+		--net=host \
+		--privileged \
+		$VCCIMAGE \
+		--cluster=testlab \
+		--storage-host=$2 \
+		--storage-port=2379 \
+		--service=workernode
+	docker start workernode
 else
 	docker run -d $DOCKER_ARGS $VCCIMAGE $@
 fi
-
