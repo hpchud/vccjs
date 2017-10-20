@@ -107,7 +107,7 @@ elif test "$1" = 'setuplab'; then
 	docker start workernode
 elif test "$1" = 'setupheadnode'; then
 	docker run -d --net=host --restart=always hpchud/vcc-discovery
-	docker run -d --link discovery:discovery \
+	docker run -d \
 		--name=headnode \
 		-v /cluster:/cluster \
 		--net=host \
@@ -119,7 +119,7 @@ elif test "$1" = 'setupheadnode'; then
 		--service=headnode
 	docker start headnode
 elif test "$1" = 'setupworkernode'; then
-	docker run -d --link discovery:discovery \
+	docker run -d \
 		--name=workernode \
 		--net=host \
 		--privileged \
