@@ -28,7 +28,14 @@ var ClusterKeys = function (config) {
  * Enumerate all public keys in the discovery
  */
 ClusterKeys.prototype.enumeratePublicKeys = function () {
+    var deferred = promise();
     var me = this;
+    this.kv.list("/cluster/"+this.config.cluster+"/keys", true).then(function (keys) {
+        deferred.resolve(keys);
+    }, function (err) {
+        deferred.reject(err);
+    });
+    return deferred.promise();
 }
 
 /**

@@ -7,6 +7,8 @@ var tmp = require('tmp');
 var clusterkeys = null;
 var ClusterKeys = null;
 var config = null;
+var publickey = null;
+var enumeratekeys = null;
 
 describe('clusterkeys', function () {
 
@@ -74,6 +76,33 @@ describe('clusterkeys', function () {
         }, function (err) {
             done(err);
         });
-    })
+    });
+
+    it('read in the generated public key', function (done) {
+        fs.readFile(path.join(__dirname, "id_rsa.pub"), 'utf8', function (err, public_key) {
+            if (err) {
+                done('Could not open public key file '+err);
+            }
+            publickey = public_key.trim();
+            done();
+        });
+    });
+
+    it('enumerate keys in discovery', function (done) {
+        ClusterKeys.enumeratePublicKeys().then(function (keys) {
+            enumeratekeys = keys;
+            done();
+        }, function (err) {
+            done(err);
+        });
+    });
+
+    it('check that the generated public key was written to discovery correctly', function (done) {
+        if (enumeratekeys[config.myhostname] == publickey) {
+            done();
+        } else {
+            done('do not match');
+        }
+    });
 
 });
