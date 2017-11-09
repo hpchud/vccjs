@@ -78,7 +78,7 @@ ClusterKeys.prototype.generateKeys = function (basepath) {
         var basepath = path.join(me.current_home, ".ssh");
     }
     var location = path.join(basepath, "id_rsa");
-    var comment = this.current_user+'@vcc';
+    var comment = this.current_user+'@'+this.config.myhostname;
     var password = false;
 
     // does key exist?
