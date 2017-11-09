@@ -41,8 +41,30 @@ ClusterKeys.prototype.enumeratePublicKeys = function () {
 /**
  * Write an authorized_keys file for the current user
  */
-ClusterKeys.prototype.writeAuthorizedKeys = function () {
+ClusterKeys.prototype.writeAuthorizedKeys = function (basepath) {
+    var deferred = promise();
     var me = this;
+    
+    if (!basepath) {
+        var basepath = path.join(me.current_home, ".ssh");
+    }
+    var location = path.join(basepath, "authorized_keys");
+    
+    this.enumeratePublicKeys().then(function (keys) {
+        var file = fs.createWriteStream(location);
+        file.on('error', function (err) {
+            logger.error('Could not open', location, 'for writing', err);
+            deferred.reject(err);
+        });
+        for (var key in keys) {
+            logger.debug('Adding key from', key);
+            file.write(keys[key]+'\n');
+        }
+        file.end();
+        deferred.resolve();
+    });
+    
+    return deferred.promise();
 }
 
 /**

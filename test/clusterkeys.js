@@ -104,5 +104,13 @@ describe('clusterkeys', function () {
             done('do not match');
         }
     });
+    
+    it('write the authorized_keys file', function (done) {
+        ClusterKeys.writeAuthorizedKeys(__dirname).then(function () {
+            done();
+        }, function (err) {
+            done(err);
+        });
+    });
 
 });
