@@ -68,4 +68,12 @@ describe('clusterkeys', function () {
         });
     });
 
+    it('publish public key to discovery', function (done) {
+        ClusterKeys.publishKeys(__dirname).then(function () {
+            done();
+        }, function (err) {
+            done(err);
+        });
+    })
+
 });

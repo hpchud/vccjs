@@ -44,6 +44,7 @@ ClusterKeys.prototype.writeAuthorizedKeys = function () {
 ClusterKeys.prototype.generateKeys = function (basepath) {
     var deferred = promise();
     var me = this;
+
     if (!basepath) {
         var basepath = path.join(me.current_home, ".ssh");
     }
@@ -84,10 +85,36 @@ ClusterKeys.prototype.generateKeys = function (basepath) {
 }
 
 /**
- * Publish my key to the discovery service
+ * Publish my public key to the discovery service
  */
-ClusterKeys.prototype.publishKeys = function () {
+ClusterKeys.prototype.publishKeys = function (basepath) {
+    var deferred = promise();
     var me = this;
+
+    if (!basepath) {
+        var basepath = path.join(me.current_home, ".ssh");
+    }
+    var location = path.join(basepath, "id_rsa.pub");
+
+    // read public key
+    fs.readFile(location, 'utf8', function (err, public_key) {
+        if (err) {
+            logger.error('Could not open public key file', location, err);
+            deferred.reject();
+        }
+        
+        // set on the kv store
+        me.kv.set("/cluster/"+me.config.cluster+"/keys/"+me.config.myhostname, public_key.trim()).then(function () {
+            logger.debug('Public key published to discovery for', me.config.myhostname);
+            deferred.resolve();
+        }, function (err) {
+            logger.error('Unable to publish key to discovery:', err);
+            deferred.reject();
+        });
+
+    });
+
+    return deferred.promise();
 }
 
 /**
