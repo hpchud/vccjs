@@ -1,0 +1,11 @@
+[Unit]
+Description=VCC Networking
+After=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=true
+ExecStart=/usr/bin/env node /vccjs/clusternet.js
+
+[Install]
+RequiredBy=vcc-ready.target
