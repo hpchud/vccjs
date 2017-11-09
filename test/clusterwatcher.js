@@ -82,10 +82,7 @@ describe('clusterwatcher', function () {
     it('run an iteration of watchCluster()', function (done) {
         this.timeout(10000);
         ClusterWatcher.settle_ms = 1000;
-        ClusterWatcher.on_change.push(function () {
-            done();
-        });
-        ClusterWatcher.watchCluster();
+        ClusterWatcher.watchCluster(done);
     });
 
 });

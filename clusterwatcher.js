@@ -120,7 +120,7 @@ ClusterWatcher.prototype.runClusterHooks = function () {
 /**
  * The main loop to watch the discovery KV store for changes
  */
-ClusterWatcher.prototype.watchCluster = function () {
+ClusterWatcher.prototype.watchCluster = function (callback) {
     var me = this;
     this.kv.list("/cluster/"+this.config.cluster+"/hosts", true).then(function (hosts) {
         // sort the host list
@@ -159,7 +159,11 @@ ClusterWatcher.prototype.watchCluster = function () {
                         })(function () {
                             // cluster hooks done, schedule next loop
                             me.lasthosts = currenthosts;
-                            setTimeout(me.watchCluster.bind(me), me.poll_ms);
+                            if (!callback) {
+                                setTimeout(me.watchCluster.bind(me), me.poll_ms);
+                            } else {
+                                callback();
+                            }
                         });
                     }, function (err) {
                         logger.error("could not write hosts.vcc", err);
