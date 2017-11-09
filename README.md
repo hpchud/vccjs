@@ -14,7 +14,7 @@ The interactions between each component required to support the parallel applica
 
 ## Scope
 
-The VCC is mostly un-opinionated on how the software you wish to run is actually installed - for this you might choose a package manager like Nix, Guix, or one that comes with the programming language (like `npm` for Node.js). Alternatively, your Dockerfile might just contain the directives to compile the exact environment from source.
+The VCC is mostly un-opinionated on how the software you wish to run is actually installed - for this you might choose a tool like EasyBuild, Nix, Guix, or one that comes with a programming language (like `npm` for Node.js). Alternatively, your Dockerfile might just contain the directives to compile the exact environment from source.
 
 The VCC aims to fill the gap between the OS and the isolated software, where the isolated software (or libraries it depends on) expect an certain execution model. For example, it is trivial to package a parallel MPI program in a portable way. However, for execution as intended, it must be run on a system providing the correct interfaces for parallel MPI execution - i.e. _a cluster_. Same goes for other kinds of applications, such as Hadoop. If you don't have the appropriate system for execution available, or you have a different kind of system, you might be stuck. The VCC takes the approach that this dependency on a _logical execution model_ is just as much a part of a reproducible experiment as the code, artefact and resulting publication.
 
@@ -41,7 +41,7 @@ If you are just getting started, you probably want to do one of the following:
 
 ## Running one of the pre-built images
 
-This is the recommended way to get started and to test the solution. Both these pre-built images require a *discovery* container to be running, as they support *multi node* execution.
+This is the recommended way to get started and to test the solution. The pre-built images require a *discovery* container to be running, as they support *multi node* execution.
 
 Start the discovery service under Docker
 
@@ -51,7 +51,7 @@ docker run -d --name=discovery hpchud/vcc-discovery
 
 ### A Torque/PBS cluster
 
-This image provides a full Torque/PBS cluster, with the MAUI scheduler, and demonstrates how to provision a cluster middleware in a VCC that can be dynamically scaled on top of an existing resource.
+The [hpchud/vcc-torque](https://github.com/hpchud/vcc-torque) image provides a full Torque/PBS cluster, with the MAUI scheduler, and demonstrates how to provision a cluster middleware in a VCC that can be dynamically scaled on top of an existing resource.
 
 Start the head node for this system with the following command
 
