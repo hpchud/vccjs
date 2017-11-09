@@ -112,5 +112,24 @@ describe('clusterkeys', function () {
             done(err);
         });
     });
+    
+    it('run an iteration of watchCluster()', function (done) {
+        this.timeout(10000);
+        ClusterKeys.settle_ms = 1000;
+        ClusterKeys.watchCluster(done);
+    });
+    
+    it('check that the authorized_keys file was written correctly', function (done) {
+        fs.readFile(path.join(__dirname, "authorized_keys"), 'utf8', function (err, authorized_key) {
+            if (err) {
+                done('Could not open authorized_keys file '+err);
+            }
+            if (authorized_key.trim() == publickey) {
+                done();
+            } else {
+                done('do not match');
+            }
+        });
+    });
 
 });

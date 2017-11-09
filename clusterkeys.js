@@ -22,6 +22,14 @@ var ClusterKeys = function (config) {
     // the discovery kv store
     this.kv = new kvstore();
     this.kv.connect(config.kvstore.host, config.kvstore.port);
+    // key cache
+    this.lastkeys = {};
+    // the timer id for cluster changed
+    this.changed_timeout = null;
+    // poll frequency
+    this.poll_ms = 5000;
+    // time to detect settle
+    this.settle_ms = 10000;
 };
 
 /**
@@ -149,8 +157,51 @@ ClusterKeys.prototype.publishKeys = function (basepath) {
 /**
  * The loop to watch the discovery KV store for changes
  */
-ClusterKeys.prototype.watchCluster = function () {
+ClusterKeys.prototype.watchCluster = function (callback) {
     var me = this;
+    
+    this.enumeratePublicKeys().then(function (currentkeys) {
+        logger.debug(Object.keys(currentkeys).length, "keys in cluster");
+        // compare with lastkeys
+        if (JSON.stringify(currentkeys) === JSON.stringify(me.lastkeys)) {
+            logger.debug("cluster has not changed");
+            // cluster not changed, schedule next loop
+            me.lastkeys = currentkeys;
+            setTimeout(me.watchCluster.bind(me), me.poll_ms);
+        } else {
+            // cluster has changed
+            // see if it changed before we managed to run the hooks from the last change
+            // and if so, do not run the hooks from the last change
+            if (me.changed_timeout) {
+                logger.warn("cluster is not settled, changed before we ran handlers");
+                logger.debug("clearing existing timeout for cluster changed event");
+                clearTimeout(me.changed_timeout);
+            }
+            // dispatch the changed timeout event
+            logger.debug("cluster changed, dispatch timeout for cluster changed event");
+            (function (currentkeys) {
+                changed_timeout = setTimeout(function () {
+                    // cluster changed handler
+                    logger.debug("run cluster changed event");
+                    logger.debug("writing authorized_keys");
+                    me.writeAuthorizedKeys().then(function () {
+                        logger.debug("written authorized_keys, schedule next loop");
+                        me.lastkeys = currentkeys;
+                        if (!callback) {
+                            setTimeout(me.watchCluster.bind(me), me.poll_ms);
+                        } else {
+                            callback();
+                        }
+                    }, function (err) {
+                        logger.error("could not write authorized_keys", err);
+                    });
+                }, me.settle_ms);
+            })(currentkeys);
+        }
+    }, function (err) {
+        logger.error("could not enumerate keys in the cluster", err);
+    }).done();
+    
 }
 
 /**
