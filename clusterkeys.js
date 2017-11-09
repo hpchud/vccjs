@@ -41,10 +41,13 @@ ClusterKeys.prototype.writeAuthorizedKeys = function () {
 /**
  * Generate keys if they don't exist for the current user
  */
-ClusterKeys.prototype.generateKeys = function () {
+ClusterKeys.prototype.generateKeys = function (basepath) {
     var deferred = promise();
     var me = this;
-    var location = path.join(me.current_home, ".ssh", "id_rsa");
+    if (!basepath) {
+        var basepath = path.join(me.current_home, ".ssh");
+    }
+    var location = path.join(basepath, "id_rsa");
     var comment = '@vcc';
     var password = false;
 
@@ -52,7 +55,7 @@ ClusterKeys.prototype.generateKeys = function () {
     fs.stat(location, function(err, stat) {
         if(err == null) {
             logger.info("Private key already exists for", me.current_user);
-            deferred.resolve();
+            deferred.resolve(false);
         } else if(err.code == 'ENOENT') {
             // file does not exist
             logger.debug('Private key does not exist for', me.current_user, "ENOENT");
@@ -69,6 +72,7 @@ ClusterKeys.prototype.generateKeys = function () {
                     deferred.reject();
                 }
                 logger.info("Finished generating keys for", me.current_user);
+                deferred.resolve(true);
             });
         } else {
             logger.error('Error testing for private key for', me.current_user, err.code);

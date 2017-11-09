@@ -28,4 +28,44 @@ describe('clusterkeys', function () {
         ClusterKeys = new clusterkeys(config);
     });
 
+    it('delete private key from previous test if exists', function (done) {
+        fs.stat(path.join(__dirname, "id_rsa"), function (err, stats) {
+            if (err) {
+                done(err);
+            }
+            fs.unlink(path.join(__dirname, "id_rsa"), function (err) {
+                if (err) {
+                    done(err);
+                }
+                done();
+            });
+        });
+    });
+
+    it('delete public key from previous test if exists', function (done) {
+        fs.stat(path.join(__dirname, "id_rsa.pub"), function (err, stats) {
+            if (err) {
+                done(err);
+            }
+            fs.unlink(path.join(__dirname, "id_rsa.pub"), function (err) {
+                if (err) {
+                    done(err);
+                }
+                done();
+            });
+        });
+    });
+
+    it('generate public and private keys', function (done) {
+        ClusterKeys.generateKeys(__dirname).then(function (generated) {
+            if (generated) {
+                done();
+            } else {
+                done('key already exists but it shouldnt');
+            }
+        }, function (err) {
+            done(err);
+        });
+    });
+
 });
