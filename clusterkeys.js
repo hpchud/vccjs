@@ -8,6 +8,7 @@ var path = require('path');
 
 var vccutil = require("./vccutil.js");
 var logger = require("./log.js");
+var kvstore = require("./kvstore.js");
 
 /**
  * Public key discovery for the VCC
@@ -18,6 +19,9 @@ var ClusterKeys = function (config) {
     this.config = config;
     this.current_user = os.userInfo().username;
     this.current_home = os.userInfo().homedir;
+    // the discovery kv store
+    this.kv = new kvstore();
+    this.kv.connect(config.kvstore.host, config.kvstore.port);
 };
 
 /**
