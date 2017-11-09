@@ -140,9 +140,8 @@ ClusterKeys.prototype.publishKeys = function (basepath) {
             deferred.reject();
         }
         
-        // set on the kv store
-        me.kv.set("/cluster/"+me.config.cluster+"/keys/"+me.config.myhostname, public_key.trim()).then(function () {
-            logger.debug('Public key published to discovery for', me.config.myhostname);
+        // register on the kv store
+        me.kv.register("/cluster/"+me.config.cluster+"/keys/"+me.config.myhostname, public_key.trim(), 60).then(function () {
             deferred.resolve();
         }, function (err) {
             logger.error('Unable to publish key to discovery:', err);
@@ -155,7 +154,7 @@ ClusterKeys.prototype.publishKeys = function (basepath) {
 }
 
 /**
- * The loop to watch the discovery KV store for changes
+ * The main loop to watch the discovery KV store for changes
  */
 ClusterKeys.prototype.watchCluster = function (callback) {
     var me = this;
@@ -204,16 +203,10 @@ ClusterKeys.prototype.watchCluster = function (callback) {
     
 }
 
-/**
- * The main function to call if we are loaded as a daemon
- */
-ClusterKeys.prototype.main = function () {
-    var me = this;
-}
-
 if (require.main === module) {
     var clusterkeys = new ClusterKeys(vccutil.getConfig());
-    clusterkeys.main();
+    clusterkeys.generateKeys().then(clusterkeys.publishKeys());
+    clusterkeys.watchCluster();
 } else {
     module.exports = ClusterKeys;
 }
