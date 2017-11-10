@@ -5,6 +5,7 @@ graphics:
     message: "vcc"
     hidelog: true
 default_path: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+systemd: true
 cluster:
     kvstore:
         type: "etcd"

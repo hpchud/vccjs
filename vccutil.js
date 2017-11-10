@@ -3,6 +3,28 @@ var fs = require('fs');
 var path = require('path');
 var yaml = require('yamljs');
 var promise = require("deferred");
+var notify = require('systemd-notify');
+
+exports.systemdNotify = function (status, ready) {
+	var deferred = promise();
+	var fullconfig = exports.getConfig(true);
+	if (fullconfig.systemd) {
+		notify({
+			ready: ready,
+			status: status,
+			pid: process.pid
+			},
+			function(err) {
+				if (err) {
+					deferred.reject(err);
+				} else {
+					deferred.resolve();
+				}
+			}
+		);
+	}
+	return deferred.promise();
+}
 
 exports.getRunDir = function () {
 	// the run dir where we can find init.yml is in env INIT_RUN_DIR
