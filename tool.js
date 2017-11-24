@@ -35,7 +35,7 @@ if (options.version) {
 // info command
 if (options.info) {
     // get some basic details about this image
-    var inityml = yaml.load("/etc/init.yml");
+    var inityml = yaml.load("/etc/cluster.yml");
     var info = {};
     if(!inityml.cluster.image_info) {
         console.error("This image does not define any author info in the init.yml");
@@ -44,15 +44,6 @@ if (options.info) {
         info['Version'] = inityml.cluster.image_info.version;
         info['Author'] = inityml.cluster.image_info.author;
     }
-    // check for multi service image
-    info['Services'] = {};
-    info.Services['Default'] = inityml.cluster.service;
-    info.Services['Available'] = [];
-    files = glob.sync("/etc/vcc/services-*.yml");
-    for (var i = files.length - 1; i >= 0; i--) {
-        info.Services.Available.push(files[i].replace("/etc/vcc/services-", "").replace(".yml", ""));
-    };
-    
     // check for service providers and dependencies
     try {
         var deps = yaml.load("/etc/vcc/dependencies.yml");
@@ -78,7 +69,7 @@ if (!(options['storage-host'] && options['storage-port'])) {
 }
 // generate yml config with cluster name and storage details in
 // since the tool is executed within the image itself, we can just look at /etc/init.yml
-var inityml = yaml.load("/etc/init.yml");
+var inityml = yaml.load("/etc/cluster.yml");
 // storage settings
 if(!options['storage-type']) {
     inityml.cluster.kvstore.type = "etcd";
