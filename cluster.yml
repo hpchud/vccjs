@@ -1,19 +1,12 @@
 ---
 
-use_graphics: false
-graphics:
-    message: "vcc"
-    hidelog: true
-default_path: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-systemd: true
-cluster:
-    kvstore:
-        type: "etcd"
-        host: "localhost"
-        port: "4001"
-    cluster: "test"
-    service: null
-    image_info:
-        name: vcc base image
-        author: joshua.higgins@hud.ac.uk
-        version: 0.1
+kvstore:
+    type: "etcd"
+    host: "localhost"
+    port: "4001"
+cluster: "test"
+service: null
+image_info:
+    name: vcc base image
+    author: joshua.higgins@hud.ac.uk
+    version: 0.1
