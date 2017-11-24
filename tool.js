@@ -35,14 +35,14 @@ if (options.version) {
 // info command
 if (options.info) {
     // get some basic details about this image
-    var inityml = yaml.load("/etc/cluster.yml");
+    var clusteryml = yaml.load("/etc/cluster.yml");
     var info = {};
-    if(!inityml.cluster.image_info) {
+    if(!clusteryml.image_info) {
         console.error("This image does not define any author info in the init.yml");
     } else {
-        info['Name'] = inityml.cluster.image_info.name;
-        info['Version'] = inityml.cluster.image_info.version;
-        info['Author'] = inityml.cluster.image_info.author;
+        info['Name'] = clusteryml.image_info.name;
+        info['Version'] = clusteryml.image_info.version;
+        info['Author'] = clusteryml.image_info.author;
     }
     // check for service providers and dependencies
     try {
@@ -69,27 +69,27 @@ if (!(options['storage-host'] && options['storage-port'])) {
 }
 // generate yml config with cluster name and storage details in
 // since the tool is executed within the image itself, we can just look at /etc/init.yml
-var inityml = yaml.load("/etc/cluster.yml");
+var clusteryml = yaml.load("/etc/cluster.yml");
 // storage settings
 if(!options['storage-type']) {
-    inityml.cluster.kvstore.type = "etcd";
+    clusteryml.kvstore.type = "etcd";
 } else {
-    inityml.cluster.kvstore.type = options['storage-type'];
+    clusteryml.kvstore.type = options['storage-type'];
 }
-inityml.cluster.kvstore.host = options['storage-host'];
-inityml.cluster.kvstore.port = options['storage-port'];
+clusteryml.kvstore.host = options['storage-host'];
+clusteryml.kvstore.port = options['storage-port'];
 // address override
 if(options['force-address']) {
-    inityml.cluster.myaddress = options['force-address'];
+    clusteryml.myaddress = options['force-address'];
 }
 // cluster dns
 if(options['no-dns'] || options.usermode) {
-    inityml.cluster.nodns = true;
+    clusteryml.nodns = true;
 }
 // set cluster name and service
-inityml.cluster.cluster = options.cluster;
+clusteryml.cluster = options.cluster;
 if (options.service) {
-    inityml.cluster.service = options.service;
+    clusteryml.service = options.service;
 }
 // print the yml file to screen
-console.log(yaml.stringify(inityml));
+console.log(yaml.stringify(clusteryml));
