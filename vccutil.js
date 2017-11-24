@@ -27,10 +27,10 @@ exports.systemdNotify = function (status, ready) {
 }
 
 exports.getRunDir = function () {
-    // the run dir where we can find init.yml is in env INIT_RUN_DIR
-    var run_dir = process.env['INIT_RUN_DIR'];
+    // the run dir where we can find init.yml is in env VCC_RUN_DIR
+    var run_dir = process.env['VCC_RUN_DIR'];
     if (!run_dir) {
-        logger.warn('No environment variable INIT_RUN_DIR.... assuming /run');
+        logger.warn('No environment variable VCC_RUN_DIR.... assuming /run');
         run_dir = '/run';
     }
     return run_dir;
