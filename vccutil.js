@@ -7,8 +7,8 @@ var notify = require('systemd-notify');
 
 exports.systemdNotify = function (status, ready) {
     var deferred = promise();
-    var fullconfig = exports.getConfig(true);
-    if (fullconfig.systemd) {
+    var config = exports.getConfig();
+    if (config.systemd) {
         notify({
             ready: ready,
             status: status,
@@ -40,25 +40,13 @@ exports.getConfig = function (full, run_dir) {
     if (!run_dir) {
         var run_dir = exports.getRunDir();
     }
-    var config = yaml.load(path.join(run_dir, 'init.yml'));
-    if (full) {
-        return config;
-    } else {
-        if (config.cluster) {
-            return config.cluster;
-        } else {
-            logger.error("/etc/init.yml does not define cluster configuration!");
-            throw "/etc/init.yml has no cluster configuration";
-        }
-    }
+    return yaml.load(path.join(run_dir, 'cluster.yml'));
 }
 
 exports.writeConfig = function (newconfig) {
     var deferred = promise();
     var run_dir = exports.getRunDir();
-    var fullconfig = exports.getConfig(true);
-    fullconfig.cluster = newconfig;
-    fs.writeFile(path.join(run_dir, 'init.yml'), yaml.stringify(fullconfig), function (err) {
+    fs.writeFile(path.join(run_dir, 'cluster.yml'), yaml.stringify(exports.getConfig()), function (err) {
         if (err) {
             deferred.reject(err);
         }

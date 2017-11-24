@@ -1,5 +1,5 @@
 ---
-
+systemd: true
 kvstore:
     type: "etcd"
     host: "localhost"
