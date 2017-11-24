@@ -91,5 +91,14 @@ clusteryml.cluster = options.cluster;
 if (options.service) {
     clusteryml.service = options.service;
 }
-// print the yml file to screen
-console.log(yaml.stringify(clusteryml));
+// write the new cluster.yml file
+var vccutil = require("./vccutil.js");
+vccutil.writeConfig(clusteryml).then(function () {
+    console.log("written cluster.yml");
+    process.exit(0);
+},
+function (err) {
+    console.error("failed to write cluster.yml");
+    console.error(err);
+    process.exit(1);
+});

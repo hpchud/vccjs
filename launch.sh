@@ -3,8 +3,7 @@
 # run the tool
 tooloutput=$(/vccjs/tool.js $@)
 if [ "$?" = "0" ]; then
-	# if return code is 0, write the cluster.yml and start init
-	echo $tooloutput > /run/cluster.yml
+	# if return code is 0 start init
 	exec /usr/sbin/init
 else
 	# otherwise, tool just print the output
