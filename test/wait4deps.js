@@ -15,7 +15,7 @@ describe('wait4deps', function () {
     });
 
     it('load the test init.yml', function () {
-        config = yaml.load('init.yml');
+        config = yaml.load('cluster.yml');
         config.cluster = "test";
         config.myhostname = "testhost";
         config.myaddress = "127.0.0.1";
@@ -142,12 +142,12 @@ describe('wait4deps', function () {
 
     it('create temporary directory for next test', function () {
         var tempdir = tmp.dirSync();
-        process.env['INIT_RUN_DIR'] = tempdir.name;
+        process.env['VCC_RUN_DIR'] = tempdir.name;
 
     });
 
-    it('copy a test init.yml to the temporary directory', function () {
-        fs.copySync(path.join(process.cwd(), 'init.yml'), path.join(process.env['INIT_RUN_DIR'], '/init.yml'));
+    it('copy a test cluster.yml to the temporary directory', function () {
+        fs.copySync(path.join(process.cwd(), 'cluster.yml'), path.join(process.env['VCC_RUN_DIR'], '/cluster.yml'));
     });
 
     it('can write new config file', function (done) {

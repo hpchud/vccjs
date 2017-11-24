@@ -16,7 +16,7 @@ describe('clusterwatcher', function () {
     });
 
     it('load the test init.yml', function () {
-        config = yaml.load('init.yml');
+        config = yaml.load('cluster.yml');
         config.cluster = "test";
         config.myhostname = "testhost";
         config.myaddress = "127.0.0.1";
