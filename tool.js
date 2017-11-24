@@ -12,10 +12,6 @@ opt = require('node-getopt').create([
   ['', 'service=SERVICE', 'for a multi service image, specify the service to start'],
   ['', 'force-address=IP', 'manually set the advertised IP of this instance'],
   ['', 'no-dns', 'don\'t use the ClusterDNS service'],
-  ['', 'usermode', 'always run services as the calling user'],
-  ['', 'fluentd-host=ADDRESS:PORT', 'use fluentd for logging'],
-  ['', 'fluentd-tag=TAG', 'the tag to use for logging (default: vcc)'],
-  //['', 'eval', 'format output suitable to eval in the host shell'],
   ['', 'just-yml', 'just dump the generated cluster init.yml and nothing else'],
   ['i', 'info', 'display information about this vcc image'],
   ['h', 'help', 'display this help'],
@@ -33,25 +29,7 @@ if (options.help) {
 
 // version command
 if (options.version) {
-    console.log("vccjs tool 0.1");
-    console.log("▒▒▒▒▒▒▒▓");
-    console.log("▒▒▒▒▒▒▒▓▓▓");
-    console.log("▒▓▓▓▓▓▓░░░▓");
-    console.log("▒▓░░░░▓░░░░▓");
-    console.log("▓░░░░░░▓░▓░▓");
-    console.log("▓░░░░░░▓░░░▓");
-    console.log("▓░░▓░░░▓▓▓▓");
-    console.log("▒▓░░░░▓▒▒▒▒▓");
-    console.log("▒▒▓▓▓▓▒▒▒▒▒▓");
-    console.log("▒▒▒▒▒▒▒▒▓▓▓▓");
-    console.log("▒▒▒▒▒▓▓▓▒▒▒▒▓");
-    console.log("▒▒▒▒▓▒▒▒▒▒▒▒▒▓");
-    console.log("▒▒▒▓▒▒▒▒▒▒▒▒▒▓");
-    console.log("▒▒▓▒▒▒▒▒▒▒▒▒▒▒▓");
-    console.log("▒▓▒▓▒▒▒▒▒▒▒▒▒▓");
-    console.log("▒▓▒▓▓▓▓▓▓▓▓▓▓");
-    console.log("▒▓▒▒▒▒▒▒▒▓");
-    console.log("▒▒▓▒▒▒▒▒▓ ");
+    console.log("vccjs tool 0.2");
     process.exit(1);
 }
 // info command
@@ -122,28 +100,5 @@ inityml.cluster.cluster = options.cluster;
 if (options.service) {
     inityml.cluster.service = options.service;
 }
-// convert to yaml and then base64 encode
-var b64inityml = new Buffer(yaml.stringify(inityml)).toString('base64');
-// generate command for starting this image
-var runcommand = "/init8js/init.js ";
-// add usermode option if required
-if (options.usermode) {
-    runcommand += "usermode ";
-}
-// add fluentd-host option if required
-if (options['fluentd-host']) {
-    runcommand += "fluentd="+options['fluentd-host']+" ";
-}
-// add fluentd-tag option if required
-if (options['fluentd-tag']) {
-    runcommand += "fluentd_tag="+options['fluentd-tag']+" ";
-}
-runcommand += "b64inityml="+b64inityml;
-// output the commands in the desired format
-if (options['just-yml']) {
-    console.log(yaml.stringify(inityml));
-    process.exit(1);
-} else {
-    console.log(runcommand);
-    process.exit(0);
-}
+// print the yml file to screen
+console.log(yaml.stringify(inityml));
