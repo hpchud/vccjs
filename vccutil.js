@@ -46,7 +46,7 @@ exports.getConfig = function (full, run_dir) {
 exports.writeConfig = function (newconfig) {
     var deferred = promise();
     var run_dir = exports.getRunDir();
-    fs.writeFile(path.join(run_dir, 'cluster.yml'), yaml.stringify(exports.getConfig()), function (err) {
+    fs.writeFile(path.join(run_dir, 'cluster.yml'), yaml.stringify(newconfig), function (err) {
         if (err) {
             deferred.reject(err);
         }
