@@ -1,5 +1,10 @@
 [Unit]
 Description=VCC under systemd
+Requires=vcc-net.service
+Requires=vcc-dns.service
+Requires=vcc-wait4deps.service
+Requires=vcc-register.service
+Requires=vcc-watcher.service
 
 [Service]
 Type=oneshot
