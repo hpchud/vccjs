@@ -1,7 +1,7 @@
 [Unit]
-Description=VCC Networking
+Description=VCC wait for dependent services on other nodes
 PartOf=vcc.service
-After=vcc.service
+After=vcc-dns.service
 
 [Service]
 ExecStart=/bin/sleep infinity
@@ -9,3 +9,4 @@ Restart=on-failure
 
 [Install]
 RequiredBy=vcc.service
+

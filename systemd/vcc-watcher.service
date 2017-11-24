@@ -1,7 +1,7 @@
 [Unit]
-Description=VCC Networking
+Description=VCC cluster watcher
 PartOf=vcc.service
-After=vcc.service
+After=vcc-register.service
 
 [Service]
 ExecStart=/bin/sleep infinity
@@ -9,3 +9,4 @@ Restart=on-failure
 
 [Install]
 RequiredBy=vcc.service
+
