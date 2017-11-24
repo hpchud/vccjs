@@ -1,3 +1,0 @@
-[Unit]
-Description=VCC cluster ready target
-Requires=vcc-net.service
