@@ -4,7 +4,7 @@ PartOf=vcc.service
 After=vcc-dns.service
 
 [Service]
-ExecStart=/bin/sleep infinity
+ExecStart=/usr/bin/env node /vccjs/wait4deps.js
 Restart=on-failure
 
 [Install]

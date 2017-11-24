@@ -4,9 +4,8 @@ PartOf=vcc.service
 After=vcc-net.service
 
 [Service]
-ExecStart=/bin/sleep infinity
+ExecStart=/usr/bin/env node /vccjs/clusterdns.js
 Restart=on-failure
 
 [Install]
 RequiredBy=vcc.service
-

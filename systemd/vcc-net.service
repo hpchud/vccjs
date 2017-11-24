@@ -4,8 +4,8 @@ PartOf=vcc.service
 After=vcc.service
 
 [Service]
-ExecStart=/bin/sleep infinity
-Restart=on-failure
+Type=oneshot
+ExecStart=/usr/bin/env node /vccjs/clusternet.js
 
 [Install]
 RequiredBy=vcc.service

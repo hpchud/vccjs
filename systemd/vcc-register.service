@@ -4,7 +4,7 @@ PartOf=vcc.service
 After=vcc-wait4deps.service
 
 [Service]
-ExecStart=/bin/sleep infinity
+ExecStart=/usr/bin/env node /vccjs/registerservice.js
 Restart=on-failure
 
 [Install]
