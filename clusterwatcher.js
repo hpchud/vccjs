@@ -178,7 +178,14 @@ ClusterWatcher.prototype.watchCluster = function (callback) {
 
 if (require.main === module) {
     var clusterwatcher = new ClusterWatcher(vccutil.getConfig());
-    clusterwatcher.watchCluster();
+    // do a single iteration of the watch loop, and then tell the service manager
+    // we are ready before continuing with the watch loop
+    clusterwatcher.watchCluster(function () {
+        if (clusterwatcher.config.systemd) {
+            vccutil.systemdNotify("ClusterWatcher is ready", true);
+        }
+        setTimeout(clusterwatcher.watchCluster.bind(clusterwatcher), clusterwatcher.poll_ms);
+    });
 } else {
     module.exports = ClusterWatcher;
 }

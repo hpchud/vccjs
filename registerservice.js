@@ -39,5 +39,12 @@ exports.registerService = function (config) {
 }
 
 if (require.main === module) {
-    exports.registerService(vccutil.getConfig());
+    var config = vccutil.getConfig();
+    exports.registerService(config)
+        .then(function () {
+            // tell the service manager we are ready
+            if (config.systemd) {
+                vccutil.systemdNotify("registerService is ready", true);
+            }
+        });
 }

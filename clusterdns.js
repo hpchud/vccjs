@@ -214,7 +214,13 @@ if (require.main === module) {
         logger.warn("Not using ClusterDNS service, make sure an alternative for name resolution is available.");
     }
     // register our name
-    clusterdns.registerName();
+    clusterdns.registerName()
+        .then(function () {
+            // tell service manager we are ready
+            if (clusterdns.config.systemd) {
+                vccutil.systemdNotify("ClusterDNS is ready", true);
+            }
+        });
 } else {
     module.exports = ClusterDNS;
 }

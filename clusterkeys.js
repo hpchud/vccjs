@@ -210,7 +210,14 @@ if (require.main === module) {
             return clusterkeys.publishKeys();
         })
         .then(function () {
-            clusterkeys.watchCluster();
+            // do a single iteration of the watch loop, and then tell the service manager
+            // we are ready before continuing with the watch loop
+            clusterkeys.watchCluster(function () {
+                if (clusterkeys.config.systemd) {
+                    vccutil.systemdNotify("ClusterKeys is ready", true);
+                }
+                setTimeout(clusterkeys.watchCluster.bind(clusterkeys), clusterkeys.poll_ms);
+            });
         });
 } else {
     module.exports = ClusterKeys;
