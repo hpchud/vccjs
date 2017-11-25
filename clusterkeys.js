@@ -38,7 +38,7 @@ var ClusterKeys = function (config) {
 ClusterKeys.prototype.enumeratePublicKeys = function () {
     var deferred = promise();
     var me = this;
-    this.kv.list("/cluster/"+this.config.cluster+"/keys", true).then(function (keys) {
+    this.kv.list("/cluster/"+this.config.cluster+"/keys/"+this.current_user, true).then(function (keys) {
         deferred.resolve(keys);
     }, function (err) {
         deferred.reject(err);
@@ -141,7 +141,7 @@ ClusterKeys.prototype.publishKeys = function (basepath) {
         }
         
         // register on the kv store
-        me.kv.register("/cluster/"+me.config.cluster+"/keys/"+me.config.myhostname, public_key.trim(), 60).then(function () {
+        me.kv.register("/cluster/"+me.config.cluster+"/keys/"+me.current_user+"/"+me.config.myhostname, public_key.trim(), 60).then(function () {
             deferred.resolve();
         }, function (err) {
             logger.error('Unable to publish key to discovery:', err);
