@@ -23,7 +23,7 @@ exports.systemdNotify = function (status, ready) {
             }
         );
     }
-    return deferred.promise();
+    return deferred.promise;
 }
 
 exports.getRunDir = function () {
@@ -52,11 +52,5 @@ exports.writeConfig = function (newconfig) {
         }
         deferred.resolve();
     });
-    return deferred.promise();
-}
-
-exports.waitForNetwork = function () {
-    // wait for ClusterNet to register the network
-    var deferred = promise();
-    return deferred.promise();
+    return deferred.promise;
 }
