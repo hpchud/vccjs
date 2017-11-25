@@ -1,7 +1,7 @@
 [Unit]
 Description=VCC discovery registration
 PartOf=vcc.service
-After=vcc-wait4deps.service
+After=vcc-services.target
 
 [Service]
 ExecStart=/usr/bin/env node /vccjs/registerservice.js
