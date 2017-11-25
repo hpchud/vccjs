@@ -11,8 +11,7 @@ exports.systemdNotify = function (status, ready) {
     if (config.systemd) {
         notify({
             ready: ready,
-            status: status,
-            pid: process.pid
+            status: status
             },
             function(err) {
                 if (err) {
