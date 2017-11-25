@@ -5,6 +5,8 @@ After=vcc-services.target
 Requires=vcc-wait4deps.service
 
 [Service]
+Type=notify
+NotifyAccess=all
 ExecStart=/usr/local/bin/node /vccjs/registerservice.js
 Restart=on-failure
 

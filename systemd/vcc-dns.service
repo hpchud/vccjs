@@ -4,6 +4,8 @@ PartOf=vcc.service
 After=vcc-net.service
 
 [Service]
+Type=notify
+NotifyAccess=all
 ExecStart=/usr/local/bin/node /vccjs/clusterdns.js
 Restart=on-failure
 
