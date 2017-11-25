@@ -1,7 +1,7 @@
 [Unit]
 Description=VCC wait for dependent services on other nodes
 PartOf=vcc.service
-After=vcc-dns.service
+After=vcc-keys.service
 
 [Service]
 ExecStart=/usr/bin/env node /vccjs/wait4deps.js

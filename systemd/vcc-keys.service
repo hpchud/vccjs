@@ -1,0 +1,11 @@
+[Unit]
+Description=VCC SSH public keys
+PartOf=vcc.service
+After=vcc-dns.service
+
+[Service]
+ExecStart=/usr/bin/env node /vccjs/clusterkeys.js
+Restart=on-failure
+
+[Install]
+RequiredBy=vcc.service
