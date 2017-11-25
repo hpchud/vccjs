@@ -17,8 +17,8 @@ Units for the cluster services should be required by `vcc-services.target` so th
 
 A single image can contain two service contexts, such as a headnode and workernode.
 
-The tool will create a file `/etc/vcc/service-xxx` (where `xxx` is the service context) when starting the container.
+The tool will create a file `/run/vccservice-xxx` (where `xxx` is the service context) when starting the container.
 
-In order to select units that are applicable to the current service context, use `ConditionPathExists=/etc/vcc/service-xxx` in the unit file.
+In order to select units that are applicable to the current service context, use `ConditionPathExists=/run/vccservice-xxx` in the unit file.
 
 A unit applicable to all service contexts offered by an image does not need to set anything.

@@ -2,6 +2,10 @@
 
 var yaml = require("yamljs");
 var glob = require('glob');
+var touch = require('touch');
+var path = require('path');
+
+var vccutil = require("./vccutil.js");
 
 // define the required arguments
 opt = require('node-getopt').create([
@@ -91,8 +95,11 @@ clusteryml.cluster = options.cluster;
 if (options.service) {
     clusteryml.service = options.service;
 }
+
+// touch the service context file
+touch.sync(path.join(vccutil.getRunDir(), "/vccservice-"+clusteryml.service));
+
 // write the new cluster.yml file
-var vccutil = require("./vccutil.js");
 vccutil.writeConfig(clusteryml).then(function () {
     console.log("written cluster.yml");
     process.exit(0);
