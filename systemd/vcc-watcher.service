@@ -4,7 +4,7 @@ PartOf=vcc.service
 After=vcc-register.service
 
 [Service]
-ExecStart=/usr/bin/env node /vccjs/clusterwatcher.js
+ExecStart=/usr/local/bin/node /vccjs/clusterwatcher.js
 Restart=on-failure
 
 [Install]

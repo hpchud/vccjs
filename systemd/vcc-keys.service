@@ -4,7 +4,7 @@ PartOf=vcc.service
 After=vcc-dns.service
 
 [Service]
-ExecStart=/usr/bin/env node /vccjs/clusterkeys.js
+ExecStart=/usr/local/bin/node /vccjs/clusterkeys.js
 Restart=on-failure
 
 [Install]

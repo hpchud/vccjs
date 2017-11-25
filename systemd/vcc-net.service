@@ -5,7 +5,7 @@ After=vcc.service
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/env node /vccjs/clusternet.js
+ExecStart=/usr/local/bin/node /vccjs/clusternet.js
 
 [Install]
 RequiredBy=vcc.service

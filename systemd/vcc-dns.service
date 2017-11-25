@@ -4,7 +4,7 @@ PartOf=vcc.service
 After=vcc-net.service
 
 [Service]
-ExecStart=/usr/bin/env node /vccjs/clusterdns.js
+ExecStart=/usr/local/bin/node /vccjs/clusterdns.js
 Restart=on-failure
 
 [Install]

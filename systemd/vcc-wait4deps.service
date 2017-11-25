@@ -5,7 +5,7 @@ After=vcc-keys.service
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/env node /vccjs/wait4deps.js
+ExecStart=/usr/local/bin/node /vccjs/wait4deps.js
 
 [Install]
 RequiredBy=vcc.service
