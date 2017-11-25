@@ -205,8 +205,13 @@ ClusterKeys.prototype.watchCluster = function (callback) {
 
 if (require.main === module) {
     var clusterkeys = new ClusterKeys(vccutil.getConfig());
-    clusterkeys.generateKeys().then(clusterkeys.publishKeys());
-    clusterkeys.watchCluster();
+    clusterkeys.generateKeys()
+        .then(function () {
+            return clusterkeys.publishKeys();
+        })
+        .then(function () {
+            clusterkeys.watchCluster();
+        });
 } else {
     module.exports = ClusterKeys;
 }
