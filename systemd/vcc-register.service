@@ -2,6 +2,7 @@
 Description=VCC discovery registration
 PartOf=vcc.service
 After=vcc-services.target
+Requires=vcc-wait4deps.service
 
 [Service]
 ExecStart=/usr/bin/env node /vccjs/registerservice.js
@@ -9,4 +10,3 @@ Restart=on-failure
 
 [Install]
 RequiredBy=vcc.service
-
