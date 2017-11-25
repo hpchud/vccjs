@@ -35,7 +35,7 @@ exports.registerService = function (config) {
         logger.info("There is no service to register.")
         deferred.resolve(false);
     }
-    return deferred.promise();
+    return deferred.promise;
 }
 
 if (require.main === module) {

@@ -75,7 +75,7 @@ Wait4Deps.prototype.readDependencies = function () {
             deferred.reject(err);
         }
     });
-    return deferred.promise();
+    return deferred.promise;
 }
 
 /**
@@ -93,7 +93,7 @@ Wait4Deps.prototype.getServiceFromKV = function (service) {
         logger.debug(err);
         deferred.resolve([service, false]);
     });
-    return deferred.promise();
+    return deferred.promise;
 }
 
 /**
@@ -137,7 +137,7 @@ Wait4Deps.prototype.waitForDependencies = function () {
     };
     // poll for status changes
     setTimeout(check_depends, poll_ms);
-    return deferred.promise();
+    return deferred.promise;
 }
 
 /**
@@ -166,7 +166,7 @@ Wait4Deps.prototype.runHook = function (service, host) {
         logger.warn("could not run service hook for", service, err);
         deferred.resolve(100);
     });
-    return deferred.promise();
+    return deferred.promise;
 }
 
 /**
@@ -195,7 +195,7 @@ Wait4Deps.prototype.runServiceHooks = function () {
     } else {
         deferred.reject("no depends");
     }
-    return deferred.promise();
+    return deferred.promise;
 }
 
 /**
@@ -215,7 +215,7 @@ Wait4Deps.prototype.writeConfig = function () {
         logger.error(err);
         deferred.reject(err);
     });
-    return deferred.promise();
+    return deferred.promise;
 };
 
 /**

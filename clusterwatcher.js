@@ -63,7 +63,7 @@ ClusterWatcher.prototype.writeHosts = function (hosts) {
     file.on('close', function() {
         deferred.resolve()
     })
-    return deferred.promise();
+    return deferred.promise;
 }
 
 /**
@@ -83,7 +83,7 @@ ClusterWatcher.prototype.runHook = function (script) {
         }
         deferred.resolve(code);
     });
-    return deferred.promise();
+    return deferred.promise;
 }
 
 /**
@@ -114,7 +114,7 @@ ClusterWatcher.prototype.runClusterHooks = function () {
         logger.error("could not enumerate cluster hooks");
         deferred.reject(err);
     });
-    return deferred.promise();
+    return deferred.promise;
 }
 
 /**

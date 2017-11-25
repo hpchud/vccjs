@@ -43,7 +43,7 @@ ClusterKeys.prototype.enumeratePublicKeys = function () {
     }, function (err) {
         deferred.reject(err);
     });
-    return deferred.promise();
+    return deferred.promise;
 }
 
 /**
@@ -72,7 +72,7 @@ ClusterKeys.prototype.writeAuthorizedKeys = function (basepath) {
         deferred.resolve();
     });
     
-    return deferred.promise();
+    return deferred.promise;
 }
 
 /**
@@ -118,7 +118,7 @@ ClusterKeys.prototype.generateKeys = function (basepath) {
         }
     });
 
-    return deferred.promise();
+    return deferred.promise;
 }
 
 /**
@@ -150,7 +150,7 @@ ClusterKeys.prototype.publishKeys = function (basepath) {
 
     });
 
-    return deferred.promise();
+    return deferred.promise;
 }
 
 /**

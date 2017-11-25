@@ -44,7 +44,7 @@ ClusterNet.prototype.getInterfaces = function () {
         me.interfaces_list = [];
         deferred.resolve();
     });
-    return deferred.promise();
+    return deferred.promise;
 }
 
 /**
@@ -227,7 +227,7 @@ ClusterNet.prototype.writeConfig = function (address) {
         logger.error(err);
         deferred.reject(err);
     });
-    return deferred.promise();
+    return deferred.promise;
 };
 
 /**

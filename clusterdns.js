@@ -53,7 +53,7 @@ ClusterDNS.prototype.prependResolv = function () {
         }
         deferred.resolve();
     });
-    return deferred.promise();
+    return deferred.promise;
 }
 
 /**
@@ -84,7 +84,7 @@ ClusterDNS.prototype.getFromCache = function (qname) {
     var deferred = promise();
     // no cache for now
     deferred.resolve(false);
-    return deferred.promise();
+    return deferred.promise;
 }
 
 /**
@@ -126,7 +126,7 @@ ClusterDNS.prototype.getFromKV = function (type, qname) {
     }, function (err) {
         deferred.resolve(false);
     });
-    return deferred.promise();
+    return deferred.promise;
 }
 
 /**

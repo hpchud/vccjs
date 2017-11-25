@@ -35,7 +35,7 @@ VccStore.prototype.set = function (key, value, ttl) {
 		}
 	});
 	// return promise
-	return deferred.promise();
+	return deferred.promise;
 }
 
 VccStore.prototype.get = function (key, recursive, recursive_with_vals) {
@@ -94,7 +94,7 @@ VccStore.prototype.get = function (key, recursive, recursive_with_vals) {
 		}
 	});
 	// return promise
-	return deferred.promise();
+	return deferred.promise;
 }
 
 VccStore.prototype.watch = function (key) {
@@ -106,7 +106,7 @@ VccStore.prototype.watch = function (key) {
 	logger.debug("key watch:", key);
 	deferred.resolve(this.etcd.watcher(key));
 	// return promise
-	return deferred.promise();
+	return deferred.promise;
 }
 
 VccStore.prototype.list = function (key, with_vals) {
@@ -133,7 +133,7 @@ VccStore.prototype.register = function (key, value, ttl) {
 	}, function (err) {
 		deferred.reject(err);
 	});
-	return deferred.promise();
+	return deferred.promise;
 }
 
 module.exports = VccStore;
