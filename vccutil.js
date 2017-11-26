@@ -3,24 +3,16 @@ var fs = require('fs');
 var path = require('path');
 var yaml = require('yamljs');
 var promise = require("deferred");
-var notify = require('systemd-notify');
+var sd = require('systemd-daemon');
 
 exports.systemdNotify = function (status, ready) {
     var deferred = promise();
     var config = exports.getConfig();
     if (config.systemd) {
-        notify({
-            ready: ready,
-            status: status
-            },
-            function(err) {
-                if (err) {
-                    deferred.reject(err);
-                } else {
-                    deferred.resolve();
-                }
-            }
-        );
+        logger.debug("Sending ready notification to systemd");
+        logger.debug("NOTIFY_SOCKET=",process.env.NOTIFY_SOCKET)
+        sd.notify('READY=1');
+        deferred.resolve();
     }
     return deferred.promise;
 }
