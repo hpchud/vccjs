@@ -14,7 +14,7 @@ opt = require('node-getopt').create([
   ['', 'storage-host=IP', 'ip address of storage host'],
   ['', 'storage-port=PORT', 'port of storage service'],
   ['', 'service=SERVICE', 'for a multi service image, specify the service to start'],
-  ['', 'force-address=IP', 'manually set the advertised IP of this instance'],
+  ['', 'cluster-address=IP', 'set the advertised IP of this instance (when dual homed)'],
   ['', 'no-dns', 'don\'t use the ClusterDNS service'],
   ['', 'just-yml', 'just dump the generated cluster init.yml and nothing else'],
   ['i', 'info', 'display information about this vcc image'],
@@ -83,8 +83,8 @@ if(!options['storage-type']) {
 clusteryml.kvstore.host = options['storage-host'];
 clusteryml.kvstore.port = options['storage-port'];
 // address override
-if(options['force-address']) {
-    clusteryml.myaddress = options['force-address'];
+if(options['cluster-address']) {
+    clusteryml.myaddress = options['cluster-address'];
 }
 // cluster dns
 if(options['no-dns'] || options.usermode) {
