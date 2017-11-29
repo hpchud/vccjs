@@ -10,9 +10,9 @@ var vccutil = require("./vccutil.js");
 // define the required arguments
 opt = require('node-getopt').create([
   ['', 'cluster=NAME', 'name of cluster to join'],
-  ['', 'storage-type=TYPE', 'storage service type, supports: etcd'],
-  ['', 'storage-host=IP', 'ip address of storage host'],
-  ['', 'storage-port=PORT', 'port of storage service'],
+  ['', 'discovery=IP', 'ip or hostname of discovery service'],
+  ['', 'discovery-port=PORT', 'port of storage service, default: 2379'],
+  ['', 'discovery-type=TYPE', 'storage service type, default: etcd'],
   ['', 'service=SERVICE', 'for a multi service image, specify the service to start'],
   ['', 'cluster-address=IP', 'set the advertised IP of this instance (when dual homed)'],
   ['', 'no-dns', 'don\'t use the ClusterDNS service'],
@@ -66,30 +66,40 @@ if (!options.cluster) {
     console.error("You must specify a cluster name using --cluster=NAME");
     process.exit(1);
 }
-// check we have either --start-storage or --storage-host and --storage-port
-if (!(options['storage-host'] && options['storage-port'])) {
-    console.error("You must specify --storage-host and --storage-port");
+
+// check we have discovery, port and type is optional
+if (!(options['discovery'])) {
+    console.error("You must specify the discovery service IP or hostname with --discovery");
     process.exit(1);
 }
+
 // generate yml config with cluster name and storage details in
-// since the tool is executed within the image itself, we can just look at /etc/init.yml
+// since the tool is executed within the image itself, we can just look at /etc
 var clusteryml = yaml.load("/etc/cluster.yml");
-// storage settings
-if(!options['storage-type']) {
+
+// discovery settings
+if(!options['discovery-type']) {
     clusteryml.kvstore.type = "etcd";
 } else {
-    clusteryml.kvstore.type = options['storage-type'];
+    clusteryml.kvstore.type = options['discovery-type'];
 }
-clusteryml.kvstore.host = options['storage-host'];
-clusteryml.kvstore.port = options['storage-port'];
+clusteryml.kvstore.host = options['discovery'];
+if (!(options['discovery-port'])) {
+    clusteryml.kvstore.port = 2379;
+} else {
+    clusteryml.kvstore.port = options['discovery-port'];
+}
+
 // address override
 if(options['cluster-address']) {
     clusteryml.myaddress = options['cluster-address'];
 }
+
 // cluster dns
 if(options['no-dns'] || options.usermode) {
     clusteryml.nodns = true;
 }
+
 // set cluster name and service
 clusteryml.cluster = options.cluster;
 if (options.service) {
